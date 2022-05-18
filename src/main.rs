@@ -3,6 +3,7 @@ mod matches;
 mod token_definition;
 mod lexer;
 mod token;
+mod traversal;
 use std::process::exit;
 
 use matches::GroupMatch;
@@ -34,6 +35,7 @@ fn main()
         return;
     }
     let lexer = Lexer::tokenize(text, defs.unwrap());
+    
     //let tokens_match = TokenMatch::find(defs.unwrap(), text);
 
     let gm = GroupMatch::new(

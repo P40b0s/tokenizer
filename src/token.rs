@@ -4,14 +4,14 @@ use crate::matches::GroupMatch;
 pub struct Token<T>
 {
     //tokens : &'a Vec<Token<'a, T>>,
-    token_type : T,
-    value : String,
-    start_index : usize,
-    end_index : usize,
-    lenght : usize,
-    position : usize,
-    converted_value : Option<String>,
-    groups : Vec<GroupMatch>
+    pub token_type : T,
+    pub value : String,
+    pub start_index : usize,
+    pub end_index : usize,
+    pub lenght : usize,
+    pub position : usize,
+    pub converted_value : Option<String>,
+    pub groups : Vec<GroupMatch>
 }
 
 impl<T> Token<T>

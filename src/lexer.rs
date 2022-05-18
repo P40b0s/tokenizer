@@ -9,16 +9,15 @@ pub(crate) trait Tokenizer<T>
 
 pub struct Lexer<T>
 {
-    tokens : Vec<Token<T>>,
+    pub tokens : Vec<Token<T>>,
 }
 
 impl<T> Tokenizer<T> for Lexer<T> where T : Copy
 {
-
+    ///Поиск токенов по текущему тексту и заданным определениям токенов
     fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)-> Lexer<T>
     {
         let tokens_match = TokenMatch::find(defs, text);
-        
         let mut groups : HashMap<usize, Vec<TokenMatch<T>>> = HashMap::new();
         let mut position = 0;
         for m in tokens_match
