@@ -7,7 +7,7 @@ use std::process::exit;
 
 use matches::GroupMatch;
 
-use crate::{token_definition::TokenDefinition, matches::TokenMatch};
+use crate::{token_definition::TokenDefinition, matches::TokenMatch, lexer::{Lexer, Tokenizer}};
 #[derive(Copy, Clone)]
 enum Test
 {
@@ -33,7 +33,8 @@ fn main()
         println!("Ошибка в регексе: {}", defs.err().unwrap());
         return;
     }
-    let tokens_match = TokenMatch::find(defs.unwrap(), text);
+    let lexer = Lexer::tokenize(text, defs.unwrap());
+    //let tokens_match = TokenMatch::find(defs.unwrap(), text);
 
     let gm = GroupMatch::new(
         "G1",

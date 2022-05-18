@@ -60,6 +60,7 @@ impl<T> TokenMatch<T> where T : Copy
             precedence
         }
     }
+    ///Поиск токенов по текущим определениям токенов
     pub fn find(definitions : Vec<TokenDefinition<T>>, input : &str) -> Vec<TokenMatch<T>>
     {
         let mut tokens : Vec<TokenMatch<T>> = Vec::new();
@@ -83,7 +84,7 @@ impl<T> TokenMatch<T> where T : Copy
         });
         tokens
     }
-    //Получаем группы если они есть
+    ///Если есть именованные группы, добавляем их в группы
     fn get_groups(def : &TokenDefinition<T>, cpt : Option<Captures>) -> Vec<GroupMatch>
     {
         let mut v :Vec<GroupMatch> = Vec::new();
