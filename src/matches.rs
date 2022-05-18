@@ -1,4 +1,6 @@
+use regex::Captures;
 
+use crate::token_definition::TokenDefinition;
 
 #[derive(Debug, Clone)]
 pub struct GroupMatch
@@ -43,9 +45,9 @@ pub struct TokenMatch<T>
     pub precedence : u8
 }
 
-impl<T> TokenMatch<T>
+impl<T> TokenMatch<T> where T : Copy
 {
-    pub fn new(token_type : T, value : &str, groups: Vec<GroupMatch>, converted: Option<String>, start_index : usize, end_index : usize, precedence : u8) -> TokenMatch<T>
+    fn new(token_type : T, value : &str, groups: Vec<GroupMatch>, converted: Option<String>, start_index : usize, end_index : usize, precedence : u8) -> TokenMatch<T>
     {
         TokenMatch
         {
@@ -57,5 +59,56 @@ impl<T> TokenMatch<T>
             end_index,
             precedence
         }
+    }
+    pub fn find(definitions : Vec<TokenDefinition<T>>, input : &str) -> Vec<TokenMatch<T>>
+    {
+        let mut tokens : Vec<TokenMatch<T>> = Vec::new();
+        definitions.into_iter().for_each(|def| 
+        {
+            let matches = def.regex.find_iter(input);
+            let captures = def.regex.captures(input);
+            let groups = TokenMatch::get_groups(&def, captures);
+            
+            for m in matches
+            {
+                let mut converted : Option<String> = None;
+                if def.converter.is_some() && def.converter.as_ref().unwrap().contains_key(m.as_str())
+                {
+                    converted = Some(def.converter.as_ref().unwrap().get(m.as_str()).unwrap().clone());
+                }
+                //let def = def.clone();
+                let token = TokenMatch::new(def.return_token, m.as_str(), groups.to_vec(), converted, m.start(), m.end(), def.precedence);
+                tokens.push(token);
+            }
+        });
+        tokens
+    }
+    //Получаем группы если они есть
+    fn get_groups(def : &TokenDefinition<T>, cpt : Option<Captures>) -> Vec<GroupMatch>
+    {
+        let mut v :Vec<GroupMatch> = Vec::new();
+        if cpt.is_some()
+        {
+            let captures = cpt.unwrap();
+            def.regex.capture_names().for_each(|n|{
+                if n.is_some()
+                {
+                    let name = n.unwrap();
+                    let capture_name = captures.name(name);
+                    if capture_name.is_some()
+                    {
+                        let capture_name = capture_name.unwrap();
+                        let lenght = capture_name.end() - capture_name.start();
+                        let gm = GroupMatch::new(name,
+                            capture_name.as_str(),
+                            capture_name.start(),
+                            capture_name.end(),
+                            lenght);
+                        v.push(gm);
+                    }   
+                }
+            });
+        }
+        v
     }
 }
