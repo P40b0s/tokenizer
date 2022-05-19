@@ -1,9 +1,8 @@
-use crate::matches::GroupMatch;
+use crate::{matches::GroupMatch};
 
 #[derive(Clone)]
-pub struct Token<T>
+pub struct Token<T> where T: PartialEq
 {
-    //tokens : &'a Vec<Token<'a, T>>,
     pub token_type : T,
     pub value : String,
     pub start_index : usize,
@@ -14,15 +13,39 @@ pub struct Token<T>
     pub groups : Vec<GroupMatch>
 }
 
-impl<T> Token<T>
+impl<T> PartialEq for Token<T> where T: PartialEq 
 {
+    fn eq(&self, other: &Self) -> bool 
+    {
+        self.token_type == other.token_type
+    }
+}
+
+impl<T> Eq for Token<T> where T: Eq {}
+
+impl<T> Token<T> where T :  PartialEq
+{
+    ///Получение пустой структуры для сравнения (почему то напрямую T мы сравнивать не можем)
+    // pub fn get_equality_token(token_type : T) -> Token<T>
+    // {
+    //     Token
+    //     {
+    //         token_type,
+    //         value : String::from(""),
+    //         start_index : 0,
+    //         end_index : 0,
+    //         groups : Vec::new(),
+    //         position : 0,
+    //         converted_value : None,
+    //         lenght : 0
+    //     }
+    // }
     pub fn new(ttype : T,
         value : String,
         start_index : usize,
         end_index : usize,
         groups : Vec<GroupMatch>,
         position : usize,
-        //tokens: &'a Vec<Token<'a, T>>,
         converted : Option<String>) -> Token<T>
     {
         Token
@@ -33,10 +56,8 @@ impl<T> Token<T>
             end_index,
             groups,
             position,
-            //tokens,
             converted_value : converted,
             lenght : end_index - start_index
-
         }
     }
 }

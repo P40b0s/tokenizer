@@ -10,14 +10,14 @@ impl GroupMatch
     }
 }
 #[derive(Debug, Clone)]
-pub struct TokenDefinition<T>
+pub struct TokenDefinition<T> where T : Clone 
 {
     pub regex : Regex,
     pub return_token : T,
     pub precedence : u8,
     pub converter : Option<HashMap<String,String>>
 }
-impl<T> TokenDefinition<T> where T : Clone + Copy
+impl<T> TokenDefinition<T> where T : Clone
 {
     pub fn new(return_token : T, regex_pattern : &str, precedence : u8, converter : Option<HashMap<String,String>>) -> Result<TokenDefinition<T>, Error>
     {

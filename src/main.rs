@@ -4,12 +4,15 @@ mod token_definition;
 mod lexer;
 mod token;
 mod traversal;
+mod token_model;
+mod token_actions;
 use std::process::exit;
 
 use matches::GroupMatch;
+use predicates::{prelude::predicate, function::FnPredicate, boolean::PredicateBooleanExt, Predicate};
 
-use crate::{token_definition::TokenDefinition, matches::TokenMatch, lexer::{Lexer, Tokenizer}};
-#[derive(Copy, Clone)]
+use crate::{token_definition::TokenDefinition, matches::TokenMatch, lexer::{Lexer, Tokenizer}, token_actions::TokenActions, token_model::TokenModel};
+#[derive(Copy, Clone, PartialEq)]
 enum Test
 {
     OneTwoThree,
@@ -35,8 +38,7 @@ fn main()
         return;
     }
     let lexer = Lexer::tokenize(text, defs.unwrap());
-    
-    //let tokens_match = TokenMatch::find(defs.unwrap(), text);
+    let traversal = TokenActions::new(&lexer);
 
     let gm = GroupMatch::new(
         "G1",

@@ -2,17 +2,17 @@ use std::{collections::HashMap};
 use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token};
 use itertools::Itertools;
 
-pub(crate) trait Tokenizer<T>
+pub(crate) trait Tokenizer<T> where T : PartialEq + Clone
 {
     fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)-> Lexer<T>;
 }
 
-pub struct Lexer<T>
+pub struct Lexer<T> where T : PartialEq
 {
     pub tokens : Vec<Token<T>>,
 }
 
-impl<T> Tokenizer<T> for Lexer<T> where T : Copy
+impl<T> Tokenizer<T> for Lexer<T> where T : Copy + Clone + PartialEq
 {
     ///Поиск токенов по текущему тексту и заданным определениям токенов
     fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)-> Lexer<T>
