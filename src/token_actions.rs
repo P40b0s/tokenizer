@@ -53,7 +53,8 @@ impl<'a, T> TokenActions<'a, T> where T :  PartialEq + Clone
         }
         None
     }
-    pub fn find_forward(&self, token: &TokenModel<T>, predicate : &dyn Fn(&TokenModel<T>) -> bool, with_self : bool, max_deep : usize) -> Option<&TokenModel<T>>
+    ///Ищем токены переданные в фунции predicate вниз по массиву с максимальной глубиной max_deep и включая себя with_self
+    pub fn find_forward_many(&self, token: &TokenModel<T>, searched_tokens : &dyn Fn(&TokenModel<T>) -> bool, max_deep : usize, with_self : bool) -> Option<&TokenModel<T>>
     {
         let mut start_position = token.token.position;
         if !with_self
@@ -65,19 +66,61 @@ impl<'a, T> TokenActions<'a, T> where T :  PartialEq + Clone
         {
             if t.token.position >= start_position
             {
-                let pr = predicate(t);
+                let pr = searched_tokens(t);
+                if pr 
+                {
+                    return Some(t);
+                }
                 deep = deep + 1;
                 if deep == max_deep
                 {
                     break;
                 }
-                if pr 
+            }
+        }
+        None
+    }
+    pub fn find_forward_many_ignore(&self, token: &TokenModel<T>, searched_tokens : &dyn Fn(&TokenModel<T>) -> bool, ignored_tokens : &dyn Fn(&TokenModel<T>) -> bool, with_self : bool) -> Vec<&TokenModel<T>>
+    {
+        let mut start_position = token.token.position;
+        let mut tokens : Vec<&TokenModel<T>> = Vec::new();
+        if !with_self
+        {
+            start_position = token.token.position +1;
+        }
+        for t in &self.tokens
+        {
+            if t.token.position >= start_position && (searched_tokens(t) || ignored_tokens(t))
+            {
+                let pr = searched_tokens(t);
+                if searched_tokens(t)
+                {
+                    tokens.push(t);
+                }
+            }
+        }
+        tokens
+    }
+    ///Поиск токенов вниз по массиву, вернется любой найденный токен кроме указанных в функции `ignore_tokens`
+    pub fn find_forward_ignore(&self, token: &TokenModel<T>, ignore_tokens : &dyn Fn(&TokenModel<T>) -> bool) -> Option<&TokenModel<T>>
+    {
+        for t in &self.tokens
+        {
+            if t.token.start_index >= token.token.start_index
+            {
+                let pr = ignore_tokens(t);
+                if !pr 
                 {
                     return Some(t);
                 }
             }
         }
         None
+    }
+    pub fn find_forward(&self, token: &TokenModel<T>, searched_token : &TokenModel<T>, max_deep : usize) -> Option<&TokenModel<T>>
+    {
+        let sr = self.find_forward_many(token, &|f| f == searched_token, max_deep, false);
+        sr
     }
 
     
