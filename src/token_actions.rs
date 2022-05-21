@@ -1,7 +1,4 @@
 use std::ptr::eq;
-
-use predicates::{prelude::predicate, function::FnPredicate};
-
 use crate::{lexer::Lexer, token_model::TokenModel, token::Token};
 
 ///После получения структуры TokenModel создаем на основе нее структуру TokenActions
@@ -36,10 +33,16 @@ impl<'a, T> TokenActions<'a, T> where T :  PartialEq + Clone
     ///в моей C# версии парсера было 2 метода - от позиции и от старт индекса, оставлю от старт индекса это точно уникальное число
     pub fn next(&self, token: &TokenModel<T>, skip : usize) -> Option<&TokenModel<T>>
     {
-        let start = self.tokens.iter().find(|f|f.token.start_index == token.token.start_index);
+        let start = self.
+                                            tokens.
+                                            iter().
+                                            find(|f|f.token.start_index == token.token.start_index);
         if  start.is_some()
         {
-            let founded = self.tokens.iter().find(|f|f.token.position == start.unwrap().token.position +1 + skip);
+            let founded = self.
+                                                tokens.
+                                                iter().
+                                                find(|f|f.token.position == start.unwrap().token.position +1 + skip);
             return founded;
         }
         None

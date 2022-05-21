@@ -3,16 +3,13 @@ mod matches;
 mod token_definition;
 mod lexer;
 mod token;
-mod traversal;
 mod token_model;
 mod token_actions;
-use std::process::exit;
 
 use matches::GroupMatch;
-use predicates::{prelude::predicate, function::FnPredicate, boolean::PredicateBooleanExt, Predicate};
 
 use crate::{token_definition::TokenDefinition, matches::TokenMatch, lexer::{Lexer, Tokenizer}, token_actions::TokenActions, token_model::TokenModel};
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 enum Test
 {
     OneTwoThree,
@@ -30,7 +27,7 @@ fn get_test_definitions() -> Result<Vec<TokenDefinition<Test>>, regex::Error>
 }
 fn main() 
 {
-    let text = "Тестовый текст 123 тестовый текст 321";
+    let text = "Тестовый текст 123 тестовый текст 321 какой то текст 321";
     let defs : Result<Vec<TokenDefinition<Test>>, regex::Error> = get_test_definitions();
     if defs.is_err()
     {
@@ -39,6 +36,11 @@ fn main()
     }
     let lexer = Lexer::tokenize(text, defs.unwrap());
     let traversal = TokenActions::new(&lexer);
+    let first = traversal.get_first(Test::OneTwoThree);
+    if first.is_some()
+    {
+        let next = traversal.next(first.unwrap(), 0);
+    }
 
     let gm = GroupMatch::new(
         "G1",
