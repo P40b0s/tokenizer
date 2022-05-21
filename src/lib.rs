@@ -1,7 +1,7 @@
 mod matches;
-mod token_definition;
-mod token;
+pub mod token_definition;
+pub mod token;
 mod token_model;
-mod token_actions;
-mod lexer;
+pub mod token_actions;
+pub mod lexer;
 mod test;

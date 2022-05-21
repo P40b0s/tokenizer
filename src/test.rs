@@ -83,6 +83,22 @@ fn before_skip_one_test()
     }
 }
 #[test]
+fn find_forward_test() 
+{
+    let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
+    let lexer = Lexer::tokenize(text, get_definitions().unwrap());
+    let actions = TokenActions::new(&lexer);
+    let first = actions.get(TestTokens::OneTwoThree);
+    if first.is_some()
+    {
+        let next = actions.find_forward(first.unwrap(), TestTokens::Zero, 2);
+        let token = next.unwrap().token;
+        let skip_one = token.token_type;
+        assert_eq!(TestTokens::Zero, skip_one);
+    }
+    
+}
+#[test]
 fn find_backward_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
