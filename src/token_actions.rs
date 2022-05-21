@@ -194,6 +194,7 @@ impl<'a, T> BackwardTokenActions<'a, T> for TokenActions<'a, T> where T :  Parti
             start_position = token.token.position - 1;
         }
         let mut deep = 0;
+        //клонируем, так как нам не нужен перевернутый массив в оригинале
         let mut tmp_tokens = self.tokens.clone();
         tmp_tokens.reverse();
         for t in &tmp_tokens
@@ -202,7 +203,12 @@ impl<'a, T> BackwardTokenActions<'a, T> for TokenActions<'a, T> where T :  Parti
             {
                 if searched_tokens(t)
                 {
-                    return Some(t);
+                    //если находим нужный токет, то ищем его в основном массиве и возвращаем ссылку
+                    let t = self.
+                    tokens.
+                    iter().
+                    find(|f|f.token.end_index == t.token.end_index);
+                    return t;
                 }
                 deep = deep + 1;
                 if deep == max_deep
@@ -214,43 +220,55 @@ impl<'a, T> BackwardTokenActions<'a, T> for TokenActions<'a, T> where T :  Parti
         None
     }
     ///Ищем один из заданных токенов, игнорируем заданные токены, если встречается токен отличный от игнорируемых то функия возвратит None
-    fn find_forward_many_ignore(&self, token: &TokenModel<T>, searched_tokens : &dyn Fn(&TokenModel<T>) -> bool, ignored_tokens : &dyn Fn(&TokenModel<T>) -> bool, with_self : bool) -> Vec<&TokenModel<T>>
+    fn find_backward_many_ignore(&self, token: &TokenModel<T>, searched_tokens : &dyn Fn(&TokenModel<T>) -> bool, ignored_tokens : &dyn Fn(&TokenModel<T>) -> bool, with_self : bool) -> Vec<&TokenModel<T>>
     {
         let mut start_position = token.token.position;
         let mut tokens : Vec<&TokenModel<T>> = Vec::new();
         if !with_self
         {
-            start_position = token.token.position +1;
+            start_position = token.token.position - 1;
         }
-        for t in &self.tokens
+        let mut tmp_tokens = self.tokens.clone();
+        tmp_tokens.reverse();
+        for t in &tmp_tokens
         {
-            if t.token.position >= start_position && (searched_tokens(t) || ignored_tokens(t))
+            if t.token.position <= start_position && (searched_tokens(t) || ignored_tokens(t))
             {
                 if searched_tokens(t)
                 {
-                    tokens.push(t);
+                    let t = self.
+                    tokens.
+                    iter().
+                    find(|f|f.token.end_index == t.token.end_index);
+                    tokens.push(t.unwrap());
                 }
             }
         }
         tokens
     }
     ///Поиск токенов вниз по массиву, вернется любой найденный токен кроме указанных в функции `ignore_tokens`
-    fn find_forward_ignore(&self, token: &TokenModel<T>, ignore_tokens : &dyn Fn(&TokenModel<T>) -> bool) -> Option<&TokenModel<T>>
+    fn find_backward_ignore(&self, token: &TokenModel<T>, ignore_tokens : &dyn Fn(&TokenModel<T>) -> bool) -> Option<&TokenModel<T>>
     {
-        for t in &self.tokens
+        let mut tmp_tokens = self.tokens.clone();
+        tmp_tokens.reverse();
+        for t in &tmp_tokens
         {
-            if t.token.start_index >= token.token.start_index
+            if t.token.start_index <= token.token.start_index
             {
                 if !ignore_tokens(t)
                 {
-                    return Some(t);
+                    let t = self.
+                    tokens.
+                    iter().
+                    find(|f|f.token.end_index == t.token.end_index);
+                    return t;
                 }
             }
         }
         None
     }
     ///ищет указанный токен с максимальной глубиной поиска max_deep
-    fn find_forward(&self, token: &TokenModel<T>, searched_token : &TokenModel<T>, max_deep : usize) -> Option<&TokenModel<T>>
+    fn find_backward(&self, token: &TokenModel<T>, searched_token : &TokenModel<T>, max_deep : usize) -> Option<&TokenModel<T>>
     {
         let sr = self.find_forward_many(token, &|f| f == searched_token, max_deep, false);
         sr
