@@ -8,7 +8,7 @@ mod token_actions;
 
 use matches::GroupMatch;
 
-use crate::{token_definition::TokenDefinition, matches::TokenMatch, lexer::{Lexer, Tokenizer}, token_actions::TokenActions, token_model::TokenModel};
+use crate::{token_definition::TokenDefinition, matches::TokenMatch, lexer::{Lexer, Tokenizer}, token_actions::{TokenActions, ForwardTokensActions}, token_model::TokenModel};
 #[derive(Copy, Clone, PartialEq, Debug)]
 enum Test
 {
@@ -36,7 +36,7 @@ fn main()
     }
     let lexer = Lexer::tokenize(text, defs.unwrap());
     let traversal = TokenActions::new(&lexer);
-    let first = traversal.get_first(Test::OneTwoThree);
+    let first = traversal.get(Test::OneTwoThree);
     if first.is_some()
     {
         let next = traversal.next(first.unwrap(), 0);
