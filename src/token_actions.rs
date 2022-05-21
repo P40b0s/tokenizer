@@ -40,7 +40,7 @@ pub(crate) trait ForwardTokenActions<'a, T> where T :  PartialEq + Clone
     ///Поиск токенов вниз по массиву, вернется любой найденный токен кроме указанных в функции `ignore_tokens`
     fn find_forward_ignore(&self, token: &TokenModel<T>, ignore_tokens : &dyn Fn(&TokenModel<T>) -> bool) -> Option<&TokenModel<T>>;
     ///ищет указанный токен с максимальной глубиной поиска max_deep
-    fn find_forward(&self, token: &TokenModel<T>, searched_token : &TokenModel<T>, max_deep : usize) -> Option<&TokenModel<T>>;
+    fn find_forward(&self, token: &TokenModel<T>, searched_token : T, max_deep : usize) -> Option<&TokenModel<T>>;
 }
 
 impl<'a, T> ForwardTokenActions<'a, T> for TokenActions<'a, T> where T :  PartialEq + Clone
@@ -135,9 +135,9 @@ impl<'a, T> ForwardTokenActions<'a, T> for TokenActions<'a, T> where T :  Partia
         None
     }
     ///ищет указанный токен с максимальной глубиной поиска max_deep
-    fn find_forward(&self, token: &TokenModel<T>, searched_token : &TokenModel<T>, max_deep : usize) -> Option<&TokenModel<T>>
+    fn find_forward(&self, token: &TokenModel<T>, searched_token : T, max_deep : usize) -> Option<&TokenModel<T>>
     {
-        let sr = self.find_forward_many(token, &|f| f == searched_token, max_deep, false);
+        let sr = self.find_forward_many(token, &|f| f.token.token_type == searched_token, max_deep, false);
         sr
     }
 }
@@ -153,7 +153,7 @@ pub(crate) trait BackwardTokenActions<'a, T> where T :  PartialEq + Clone
     ///Поиск токенов вниз по массиву, вернется любой найденный токен кроме указанных в функции `ignore_tokens`
     fn find_backward_ignore(&self, token: &TokenModel<T>, ignore_tokens : &dyn Fn(&TokenModel<T>) -> bool) -> Option<&TokenModel<T>>;
     ///ищет указанный токен с максимальной глубиной поиска max_deep
-    fn find_backward(&self, token: &TokenModel<T>, searched_token : &TokenModel<T>, max_deep : usize) -> Option<&TokenModel<T>>;
+    fn find_backward(&self, token: &TokenModel<T>, searched_token : T, max_deep : usize) -> Option<&TokenModel<T>>;
 }
 
 impl<'a, T> BackwardTokenActions<'a, T> for TokenActions<'a, T> where T :  PartialEq + Clone
@@ -268,9 +268,9 @@ impl<'a, T> BackwardTokenActions<'a, T> for TokenActions<'a, T> where T :  Parti
         None
     }
     ///ищет указанный токен с максимальной глубиной поиска max_deep
-    fn find_backward(&self, token: &TokenModel<T>, searched_token : &TokenModel<T>, max_deep : usize) -> Option<&TokenModel<T>>
+    fn find_backward(&self, token: &TokenModel<T>, searched_token : T, max_deep : usize) -> Option<&TokenModel<T>>
     {
-        let sr = self.find_forward_many(token, &|f| f == searched_token, max_deep, false);
+        let sr = self.find_backward_many(token, &|f| f.token.token_type == searched_token, max_deep, false);
         sr
     }
 }

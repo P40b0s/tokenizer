@@ -6,9 +6,32 @@ use itertools::Itertools;
 
 pub(crate) trait Tokenizer<T> where T : PartialEq + Clone
 {
+    /// Токинезация текста
+    /// ### Arguments
+    ///
+    /// * `text` - Текст для токинезации
+    /// * `defs` - Список определений токенов с помощью которых будет проводится поиск
+    ///
+    /// ### Examples
+    ///
+    /// ```
+    /// //Делаем список определений токенов
+    /// let mut defs : Vec<TokenDefinition<TestTokens>> = Vec::new();
+    /// let td1 = TokenDefinition::new(TestTokens::OneTwoThree, "(?P<gr>123)", 0, None)?;
+    /// let td2 = TokenDefinition::new(TestTokens::ThreeTwoOne, r"321", 0, None)?;
+    /// defs.push(td1);
+    /// defs.push(td2);
+    /// //сам текст
+    /// let text = "Тестовый текст 123 тестовый текст 321 какой то текст 321";
+    /// //Токинезируем текст
+    /// let lexer = Lexer::tokenize(text, defs);
+    /// //оборачиваем для дальнейшей работы
+    /// let traversal = TokenActions::new(&lexer);
+    /// ```
     fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)-> Lexer<T>;
 }
-
+/// В начале нужно запустить лексер, он найдет все токены с заданными `TokenDefinition`
+/// Затем оборачиваем лексер в TokenActions и можем работать с токенами
 pub struct Lexer<T> where T : PartialEq
 {
     pub tokens : Vec<Token<T>>,

@@ -10,6 +10,7 @@ impl GroupMatch
     }
 }
 #[derive(Debug, Clone)]
+///Определение токена, определенный регекс с весом по которому будет вестись поиск в тексте
 pub struct TokenDefinition<T> where T : Clone 
 {
     pub regex : Regex,
