@@ -1,7 +1,7 @@
 
 
 use std::{collections::HashMap};
-use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token};
+use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token, token_actions::TokenActions, token_model::TokenModel};
 use itertools::Itertools;
 
 pub(crate) trait Tokenizer<T> where T : PartialEq + Clone
@@ -28,19 +28,19 @@ pub(crate) trait Tokenizer<T> where T : PartialEq + Clone
     /// //оборачиваем для дальнейшей работы
     /// let traversal = TokenActions::new(&lexer);
     /// ```
-    fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)-> Lexer<T>;
+    fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)->  Lexer<T>;
 }
 /// В начале нужно запустить лексер, он найдет все токены с заданными `TokenDefinition`
 /// Затем оборачиваем лексер в TokenActions и можем работать с токенами
 pub struct Lexer<T> where T : PartialEq
 {
-    pub tokens : Vec<Token<T>>,
+    pub tokens : Vec<Token<T>>
 }
 
 impl<T> Tokenizer<T> for Lexer<T> where T : Copy + Clone + PartialEq
 {
     ///Поиск токенов по текущему тексту и заданным определениям токенов
-    fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)-> Lexer<T>
+    fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)-> Self
     {
         let tokens_match = TokenMatch::find(defs, text);
         let mut groups : HashMap<usize, Vec<TokenMatch<T>>> = HashMap::new();
@@ -80,4 +80,5 @@ impl<T> Tokenizer<T> for Lexer<T> where T : Copy + Clone + PartialEq
         }
         Lexer{ tokens }
     }
+   
 }

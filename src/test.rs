@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
+use crate::forward_actions::ForwardTokenActions;
+use crate::backward_actions::BackwardTokenActions;
 use crate::token_definition::TokenDefinition;
 use crate::lexer::{Tokenizer, Lexer};
-use crate::token_actions::{TokenActions,ForwardTokenActions, BackwardTokenActions};
-use crate::token_model::TokenModel;
+use crate::token_actions::{TokenActions};
+
 
 
 #[derive(Copy, Clone, PartialEq, Debug)]

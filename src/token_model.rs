@@ -19,6 +19,7 @@ impl<'a, T> PartialEq for TokenModel<'a, T> where T: PartialEq
 }
 
 impl<'a, T> Eq for TokenModel<'a, T> where T: Eq {}
+
 impl<'a, T> TokenModel<'a, T> where T : PartialEq
 {
     pub fn new(lexer: &'a Lexer<T>) -> Vec<TokenModel<'a, T>>
@@ -32,5 +33,3 @@ impl<'a, T> TokenModel<'a, T> where T : PartialEq
         tokens
     }
 }
-
-
