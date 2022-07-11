@@ -2,8 +2,7 @@ use std::ptr::eq;
 use crate::{lexer::Lexer, token_model::TokenModel, token::Token};
 
 ///После получения структуры TokenModel создаем на основе нее структуру TokenActions
-/// c помощью нее мы будем получать необходимые токены из массива
-/// в которой будут располагатся методы для работы с абстрактным синтаксическим деревом
+///Глобально получает необходимый токен из массива
 pub struct TokenActions<'a, T> where T :  PartialEq + Clone
 {
     pub tokens : Vec<TokenModel<'a, T>>,

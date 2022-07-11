@@ -1,7 +1,7 @@
 
 
 use std::{collections::HashMap};
-use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token, token_actions::TokenActions, token_model::TokenModel};
+use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token, global_actions::TokenActions, token_model::TokenModel};
 use itertools::Itertools;
 
 pub(crate) trait Tokenizer<T> where T : PartialEq + Clone
@@ -15,7 +15,7 @@ pub(crate) trait Tokenizer<T> where T : PartialEq + Clone
     /// ### Examples
     ///
     /// ```
-    /// //Делаем список определений токенов
+    /// //Создается список определений токенов
     /// let mut defs : Vec<TokenDefinition<TestTokens>> = Vec::new();
     /// let td1 = TokenDefinition::new(TestTokens::OneTwoThree, "(?P<gr>123)", 0, None)?;
     /// let td2 = TokenDefinition::new(TestTokens::ThreeTwoOne, r"321", 0, None)?;
@@ -23,10 +23,21 @@ pub(crate) trait Tokenizer<T> where T : PartialEq + Clone
     /// defs.push(td2);
     /// //сам текст
     /// let text = "Тестовый текст 123 тестовый текст 321 какой то текст 321";
-    /// //Токинезируем текст
+    /// //Токинезирует текст
     /// let lexer = Lexer::tokenize(text, defs);
-    /// //оборачиваем для дальнейшей работы
+    /// //оборачивает для дальнейшей работы
     /// let traversal = TokenActions::new(&lexer);
+    /// //Получает первый токен, от которого будет осуществлять поиск
+    /// if let Some(first) = actions.get(TestTokens::OneTwoThree)
+    ///{
+    /// //В дальнейшем для поиска используются трейты BackwardTokenActions и ForwardTokenActions
+    ///    if let Some(next) = first.next(1)
+    ///    {
+    ///        let token = next.token;
+    ///        let skip_one = token.token_type;
+    ///        assert_eq!(TestTokens::Zero, skip_one);
+    ///    }
+    ///}
     /// ```
     fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)->  Lexer<T>;
 }

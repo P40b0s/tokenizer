@@ -4,7 +4,7 @@ use crate::forward_actions::ForwardTokenActions;
 use crate::backward_actions::BackwardTokenActions;
 use crate::token_definition::TokenDefinition;
 use crate::lexer::{Tokenizer, Lexer};
-use crate::token_actions::{TokenActions};
+use crate::global_actions::{TokenActions};
 
 
 
@@ -45,13 +45,14 @@ fn next_skip_one_test()
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
     let lexer = Lexer::tokenize(text, get_definitions().unwrap());
     let actions = TokenActions::new(&lexer);
-    let first = actions.get(TestTokens::OneTwoThree);
-    if first.is_some()
+    if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
-        let next = actions.next(first.unwrap(), 1);
-        let token = next.unwrap().token;
-        let skip_one = token.token_type;
-        assert_eq!(TestTokens::Zero, skip_one);
+        if let Some(next) = first.next(1)
+        {
+            let token = next.token;
+            let skip_one = token.token_type;
+            assert_eq!(TestTokens::Zero, skip_one);
+        }
     }
 }
 
@@ -61,12 +62,13 @@ fn converter_test()
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
     let lexer = Lexer::tokenize(text, get_definitions().unwrap());
     let actions = TokenActions::new(&lexer);
-    let first = actions.get(TestTokens::OneTwoThree);
-    if first.is_some()
+    if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
-        let next = actions.next(first.unwrap(), 1);
-        let token = next.unwrap().token;
-        assert_eq!(String::from("ZERO"), *token.converted_value.as_ref().unwrap())
+        if let Some(next) = first.next(1)
+        {
+            let token = next.token;
+            assert_eq!(String::from("ZERO"), *token.converted_value.as_ref().unwrap())
+        }
     }
 }
 #[test]
@@ -75,13 +77,13 @@ fn before_skip_one_test()
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
     let lexer = Lexer::tokenize(text, get_definitions().unwrap());
     let actions = TokenActions::new(&lexer);
-    let first = actions.get(TestTokens::Zero);
-    if first.is_some()
+    if let Some(first) = actions.get(TestTokens::Zero)
     {
-        let next = actions.before(first.unwrap(), 1);
-        let token = next.unwrap().token;
-        let skip_one = token.token_type;
-        assert_eq!(TestTokens::OneTwoThree, skip_one);
+        if let Some(next) = first.next(0)
+        {
+            let skip_one = next.token.token_type;
+            assert_eq!(TestTokens::OneTwoThree, skip_one);
+        } 
     }
 }
 #[test]
@@ -90,15 +92,14 @@ fn find_forward_test()
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
     let lexer = Lexer::tokenize(text, get_definitions().unwrap());
     let actions = TokenActions::new(&lexer);
-    let first = actions.get(TestTokens::OneTwoThree);
-    if first.is_some()
+    if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
-        let next = actions.find_forward(first.unwrap(), TestTokens::Zero, 2);
-        let token = next.unwrap().token;
-        let skip_one = token.token_type;
-        assert_eq!(TestTokens::Zero, skip_one);
+        if let Some(next) = first.find_forward(TestTokens::Zero, 2)
+        {
+            let skip_one = next.token.token_type;
+            assert_eq!(TestTokens::Zero, skip_one);
+        }
     }
-    
 }
 #[test]
 fn find_backward_test() 
@@ -106,15 +107,14 @@ fn find_backward_test()
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
     let lexer = Lexer::tokenize(text, get_definitions().unwrap());
     let actions = TokenActions::new(&lexer);
-    let first = actions.get(TestTokens::Zero);
-    if first.is_some()
+    if let Some(first) = actions.get(TestTokens::Zero)
     {
-        let next = actions.find_backward(first.unwrap(), TestTokens::OneTwoThree, 2);
-        let token = next.unwrap().token;
-        let skip_one = token.token_type;
-        assert_eq!(TestTokens::OneTwoThree, skip_one);
+        if let Some(next) = first.find_backward(TestTokens::OneTwoThree, 2)
+        {
+            let skip_one = next.token.token_type;
+            assert_eq!(TestTokens::OneTwoThree, skip_one);
+        } 
     }
-    
 }
 
 pub struct  TokenizerModel<T> where T : Clone + PartialEq + Copy
