@@ -15,6 +15,17 @@ pub(crate) trait Tokenizer<T> where T : PartialEq + Clone
     /// ### Examples
     ///
     /// ```
+    ///use tokenizer::forward_actions::ForwardTokenActions;
+    ///use tokenizer::backward_actions::BackwardTokenActions;
+    ///use tokenizer::token_definition::TokenDefinition;
+    ///use tokenizer::lexer::{Tokenizer, Lexer};
+    ///use tokenizer::global_actions::{TokenActions};
+    /// enum TestTokens
+    ///{
+    ///    OneTwoThree,
+    ///    ThreeTwoOne,
+    ///    Zero
+    ///}
     /// //Создается список определений токенов
     /// let mut defs : Vec<TokenDefinition<TestTokens>> = Vec::new();
     /// let td1 = TokenDefinition::new(TestTokens::OneTwoThree, "(?P<gr>123)", 0, None)?;
