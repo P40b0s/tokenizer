@@ -1,5 +1,4 @@
-use std::ptr::eq;
-use crate::{lexer::Lexer, token_model::TokenModel, token::Token};
+use crate::{lexer::Lexer, token_model::TokenModel};
 
 ///После получения структуры TokenModel создаем на основе нее структуру TokenActions
 ///Глобально получает необходимый токен из массива

@@ -1,7 +1,7 @@
 use std::{collections::HashMap};
 
-use crate::matches::{GroupMatch, TokenMatch};
-use regex::{Regex, Match, Captures, Error};
+use crate::matches::{GroupMatch};
+use regex::{Regex, Error};
 impl GroupMatch
 {
     pub fn add()

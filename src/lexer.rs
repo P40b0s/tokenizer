@@ -1,7 +1,7 @@
 
 
 use std::{collections::HashMap};
-use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token, global_actions::TokenActions, token_model::TokenModel};
+use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token};
 use itertools::Itertools;
 
 pub(crate) trait Tokenizer<T> where T : PartialEq + Clone
