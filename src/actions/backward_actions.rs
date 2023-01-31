@@ -1,7 +1,7 @@
 use crate::{token_model::TokenModel, token::Token};
 
 
-pub(crate) trait BackwardTokenActions<'a, T> where T :  PartialEq + Clone
+pub trait BackwardTokenActions<'a, T> where T :  PartialEq + Clone
 {
     fn before(&self, skip : usize) -> Option<TokenModel<T>>;
     fn before_is(&self, next : T, skip : usize) -> bool;

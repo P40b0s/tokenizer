@@ -2,7 +2,7 @@ use crate::{token_model::TokenModel, token::Token};
 
 
 
-pub(crate) trait ForwardTokenActions<'a, T> where T :  PartialEq + Clone
+pub trait ForwardTokenActions<'a, T> where T :  PartialEq + Clone
 {
     fn next(&self, skip : usize) -> Option<TokenModel<T>>;
     fn next_is(&self, next : T, skip : usize) -> bool;

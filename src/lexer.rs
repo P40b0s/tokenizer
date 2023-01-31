@@ -4,7 +4,7 @@ use std::{collections::HashMap};
 use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token};
 use itertools::Itertools;
 
-pub(crate) trait Tokenizer<T> where T : PartialEq + Clone
+pub trait Tokenizer<T> where T : PartialEq + Clone
 {
     /// Токинезация текста
     /// ### Arguments
