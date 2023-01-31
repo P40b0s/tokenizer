@@ -9,4 +9,6 @@ pub mod backward_actions;
 #[path="actions/forward_actions.rs"]
 pub mod forward_actions;
 pub mod lexer;
+#[macro_use]
+extern crate lazy_static;
 mod test;

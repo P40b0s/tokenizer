@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::{lexer::Lexer, token::Token};
 
 

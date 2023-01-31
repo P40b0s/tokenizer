@@ -66,8 +66,8 @@ impl<T> TokenMatch<T> where T : Copy
         let mut tokens : Vec<TokenMatch<T>> = Vec::new();
         definitions.into_iter().for_each(|def| 
         {
-            let matches = def.regex.find_iter(input);
-            let captures = def.regex.captures(input);
+            let matches = def.get_regex().find_iter(input);
+            let captures = def.get_regex().captures(input);
             let groups = TokenMatch::get_groups(&def, captures);
             
             for m in matches
@@ -91,7 +91,7 @@ impl<T> TokenMatch<T> where T : Copy
         if cpt.is_some()
         {
             let captures = cpt.unwrap();
-            def.regex.capture_names().for_each(|n|{
+            def.get_regex().capture_names().for_each(|n|{
                 if n.is_some()
                 {
                     let name = n.unwrap();

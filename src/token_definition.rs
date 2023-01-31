@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::{collections::HashMap, sync::Mutex, rc::Rc, cell::RefCell};
 
 use crate::matches::{GroupMatch};
 use regex::{Regex, Error};
@@ -9,6 +9,8 @@ impl GroupMatch
         print!("sdsdsdsd")
     }
 }
+
+
 #[derive(Debug, Clone)]
 ///Определение токена, определенный регекс с весом по которому будет вестись поиск в тексте
 pub struct TokenDefinition<T> where T : Clone 
@@ -17,6 +19,7 @@ pub struct TokenDefinition<T> where T : Clone
     pub return_token : T,
     pub precedence : u8,
     pub converter : Option<HashMap<String,String>>
+    
 }
 impl<T> TokenDefinition<T> where T : Clone
 {
@@ -27,15 +30,45 @@ impl<T> TokenDefinition<T> where T : Clone
     /// * `precedence` - Вес токена, если регексы перекрывают друг друга, то определением токена станет то у которого самый низкий вес (начинается с  0)
     /// * `converter` - При необходимости, конвертирование значения в другое
     ///
-    pub fn new(return_token : T, regex_pattern : &str, precedence : u8, converter : Option<HashMap<String,String>>) -> Result<TokenDefinition<T>, Error>
+    pub fn new(return_token : T, regex_pattern : &str, precedence : u8, converter : Option<[&str; 2]>) -> Result<TokenDefinition<T>, Error>
     {
-        let rx = Regex::new(regex_pattern)?;
+        let regex = Regex::new(regex_pattern)?;
+
         Ok(TokenDefinition 
         {
             return_token,
-            regex : rx,
+            regex,
             precedence,
-            converter
+            converter : match converter
+            {
+                Some(c) => 
+                {
+                    let mut converter: HashMap<String, String> = HashMap::new();
+                    converter.insert(String::from(c[0]), String::from(c[1]));
+                    Some(converter)
+                },
+                None => None
+            }
         })
+    }
+
+    pub fn get_regex(&self)-> &Regex
+    {
+        &self.regex
+    }
+}
+
+pub trait AddToken<T> where T: Clone
+{
+    fn add_token(&mut self, return_token : T, regex_pattern : &str, precedence : u8, converter : Option<[&str; 2]>) -> Result<(), Error>;
+}
+
+impl<T> AddToken<T> for Vec<TokenDefinition<T>> where T: Clone
+{
+    fn add_token(&mut self, return_token : T, regex_pattern : &str, precedence : u8, converter : Option<[&str; 2]>) -> Result<(), Error>
+    {
+        let mut  token = TokenDefinition::new(return_token, regex_pattern, precedence,converter)?;
+        self.push(token);
+        Ok(())
     }
 }

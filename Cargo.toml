@@ -9,5 +9,6 @@ name = "tokenizer"
 path = "src/lib.rs"
 
 [dependencies]
-regex = "1"
+regex = "1.7.1"
 itertools = "*"
+lazy_static="1.4.0"

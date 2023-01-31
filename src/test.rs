@@ -2,10 +2,15 @@ use std::collections::HashMap;
 
 use crate::forward_actions::ForwardTokenActions;
 use crate::backward_actions::BackwardTokenActions;
-use crate::token_definition::TokenDefinition;
+use crate::token_definition::{TokenDefinition, AddToken};
 use crate::lexer::{Tokenizer, Lexer};
 use crate::global_actions::{TokenActions};
 
+
+pub trait CreateDefinitions where Self: Clone
+{
+    fn create_defs(&self) -> Result<Vec<TokenDefinition<Self>>, regex::Error>;
+}
 
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -15,17 +20,18 @@ enum TestTokens
     ThreeTwoOne,
     Zero
 }
+
+
+
+
+
 fn get_test_definitions() -> Result<Vec<TokenDefinition<TestTokens>>, regex::Error>
 {
+    let tt = TestTokens::OneTwoThree as u32;
     let mut definitions : Vec<TokenDefinition<TestTokens>> = Vec::new();
-    let td1 = TokenDefinition::new(TestTokens::OneTwoThree, "(?P<gr>123)", 0, None)?;
-    let td2 = TokenDefinition::new(TestTokens::ThreeTwoOne, r"321", 0, None)?;
-    let mut converter: HashMap<String, String> = HashMap::new();
-    converter.insert(String::from("000"), String::from("ZERO"));
-    let td3 = TokenDefinition::new(TestTokens::Zero, r"000", 0, Some(converter))?;
-    definitions.push(td1);
-    definitions.push(td2);
-    definitions.push(td3);
+    definitions.add_token(TestTokens::OneTwoThree, "(?P<gr>123)", 0, None)?;
+    definitions.add_token(TestTokens::ThreeTwoOne, r"321", 0, None)?;
+    definitions.add_token(TestTokens::Zero, r"000", 0, Some(["000", "ZERO"]))?;
     Ok(definitions)
 }
 fn get_definitions() -> Option<Vec<TokenDefinition<TestTokens>>>
