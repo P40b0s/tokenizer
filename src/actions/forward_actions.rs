@@ -7,13 +7,14 @@ pub trait ForwardTokenActions<'a, T> where T :  PartialEq + Clone
     fn next(&self, skip : usize) -> Option<TokenModel<T>>;
     fn next_is(&self, next : T, skip : usize) -> bool;
     ///Ищем токены переданные в фунции predicate вниз по массиву с максимальной глубиной max_deep и включая себя with_self
-    fn find_forward_many(&self, searched_tokens : &dyn Fn(&Token<T>) -> bool, max_deep : usize, with_self : bool) -> Option<TokenModel<T>>;
-    ///Ищем один из заданных токенов, игнорируем заданные токены, если встречается токен отличный от игнорируемых то функия возвратит None
+    fn find_forward(&self, searched_tokens :&[T], max_deep : usize, with_self : bool) -> Option<TokenModel<T>>;
+    ///Ищем один из заданных токенов, игнорируем заданные токены, если встречается токен отличный от игнорируемых или искомых, функция остановится
     fn find_forward_many_ignore(&self, searched_tokens : &dyn Fn(&Token<T>) -> bool, ignored_tokens : &dyn Fn(&Token<T>) -> bool, with_self : bool) -> Vec<TokenModel<T>>;
     ///Поиск токенов вниз по массиву, вернется любой найденный токен кроме указанных в функции `ignore_tokens`
-    fn find_forward_ignore(&self, ignore_tokens : &dyn Fn(&Token<T>) -> bool) -> Option<TokenModel<T>>;
-    ///ищет указанный токен с максимальной глубиной поиска max_deep
-    fn find_forward(&self, searched_token : T, max_deep : usize) -> Option<TokenModel<T>>;
+    fn find_forward_first_ignore(&self, ignore_tokens : &dyn Fn(&Token<T>) -> bool) -> Option<TokenModel<T>>;
+    ///Берет указанные токены пока не встретиться отличный от них
+    fn take_forward_while_predicate(&self, predicate : &dyn Fn(&Token<T>) -> bool, with_self : bool) -> Vec<TokenModel<T>>;
+    fn take_forward_while(&self,tokens : &[T],with_self : bool) -> Vec<TokenModel<T>>;
 }
 
 impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialEq + Clone
@@ -50,8 +51,8 @@ impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialE
         false
     }
     ///Ищем токены переданные в фунции predicate вниз по массиву с максимальной глубиной max_deep и включая себя with_self
-    fn find_forward_many(&self,
-         searched_tokens : &dyn Fn(&Token<T>) -> bool,
+    fn find_forward(&self,
+         searched_tokens :&[T],
          max_deep : usize,
          with_self : bool) -> Option<TokenModel<T>>
     {
@@ -65,7 +66,7 @@ impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialE
         {
             if t.position >= start_position
             {
-                if searched_tokens(t)
+                if searched_tokens.contains(&t.token_type)
                 {
                     return Some(TokenModel { token : t, tokens : self.tokens});
                 }
@@ -78,7 +79,7 @@ impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialE
         }
         None
     }
-    ///Ищем один из заданных токенов, игнорируем заданные токены, если встречается токен отличный от игнорируемых то функия возвратит None
+    ///Ищем один из заданных токенов, игнорируем заданные токены, если встречается токен отличный от игнорируемых или заданных то поиск закончится
     fn find_forward_many_ignore(&self,
          searched_tokens : &dyn Fn(&Token<T>) -> bool,
          ignored_tokens : &dyn Fn(&Token<T>) -> bool,
@@ -102,8 +103,8 @@ impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialE
         }
         tokens
     }
-    ///Поиск токенов вниз по массиву, вернется любой найденный токен кроме указанных в функции `ignore_tokens`
-    fn find_forward_ignore(&self,
+    ///Поиск токенов вниз по массиву, вернется первый найденный токен кроме указанных в функции `ignore_tokens`
+    fn find_forward_first_ignore(&self,
         ignore_tokens : &dyn Fn(&Token<T>) -> bool) -> Option<TokenModel<T>>
     {
         for t in self.tokens
@@ -119,11 +120,53 @@ impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialE
         None
     }
     ///ищет указанный токен с максимальной глубиной поиска max_deep
-    fn find_forward(&self,
-        searched_token : T,
-        max_deep : usize) -> Option<TokenModel<T>>
+    // fn find_forward(&self,
+    //     searched_token : T,
+    //     max_deep : usize) -> Option<TokenModel<T>>
+    // {
+    //     let sr = self.find_forward_many(&|f| f.eq_type(&searched_token), max_deep, false);
+    //     sr
+    // }
+
+
+    ///Ищем один из заданных токенов, игнорируем заданные токены, если встречается токен отличный от игнорируемых или заданных то поиск закончится
+    fn take_forward_while_predicate(&self,
+        predicate : &dyn Fn(&Token<T>) -> bool,
+        with_self : bool) -> Vec<TokenModel<T>>
     {
-        let sr = self.find_forward_many(&|f| f.token_type == searched_token, max_deep, false);
-        sr
+        let mut start_position = self.token.position;
+        let mut tokens : Vec<TokenModel<T>> = Vec::new();
+        if !with_self
+        {
+            start_position = self.token.position +1;
+        }
+        for t in self.tokens
+        {
+            if (t.position >= start_position) && predicate(t)
+            {
+                    tokens.push(TokenModel { token : t, tokens : self.tokens});
+            }
+        }
+        tokens
+    }
+
+    fn take_forward_while(&self,
+    searched : &[T],
+    with_self : bool) -> Vec<TokenModel<T>>
+    {
+    let mut start_position = self.token.position;
+    let mut tokens : Vec<TokenModel<T>> = Vec::new();
+    if !with_self
+    {
+        start_position = self.token.position +1;
+    }
+    for t in self.tokens
+    {
+        if (t.position >= start_position) && searched.contains(&t.token_type)
+        {
+            tokens.push(TokenModel { token : t, tokens : self.tokens});
+        }
+    }
+    tokens
     }
 }

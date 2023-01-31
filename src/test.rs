@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::Token;
 use crate::forward_actions::ForwardTokenActions;
 use crate::backward_actions::BackwardTokenActions;
 use crate::token_definition::{TokenDefinition, TokenDefinitionsBuilder};
@@ -97,7 +98,7 @@ fn find_forward_test()
     let actions = TokenActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
-        if let Some(next) = first.find_forward(TestTokens::Zero, 2)
+        if let Some(next) = first.find_forward(&[TestTokens::Zero], 2, false)
         {
             let skip_one = next.token.token_type;
             assert_eq!(TestTokens::Zero, skip_one);

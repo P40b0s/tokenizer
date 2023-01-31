@@ -19,3 +19,4 @@ pub use lexer::{Lexer, Tokenizer};
 pub use backward_actions::BackwardTokenActions;
 pub use forward_actions::ForwardTokenActions;
 pub use global_actions::TokenActions;
+pub use token::Token;

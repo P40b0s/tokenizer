@@ -23,7 +23,7 @@ impl<T> PartialEq for Token<T> where T: PartialEq
 
 impl<T> Eq for Token<T> where T: Eq {}
 
-impl<T> Token<T> where T :  PartialEq
+impl<T> Token<T> where T : PartialEq
 {
     ///Получение пустой структуры для сравнения (почему то напрямую T мы сравнивать не можем)
     // pub fn get_equality_token(token_type : T) -> Token<T>
@@ -59,5 +59,10 @@ impl<T> Token<T> where T :  PartialEq
             converted_value : converted,
             lenght : end_index - start_index
         }
+    }
+
+    pub fn eq_type(&self, ttype : &T) -> bool
+    {
+        self.token_type == *ttype
     }
 }
