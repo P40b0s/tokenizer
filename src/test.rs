@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::forward_actions::ForwardTokenActions;
 use crate::backward_actions::BackwardTokenActions;
-use crate::token_definition::{TokenDefinition, AddToken};
+use crate::token_definition::{TokenDefinition, TokenDefinitionsBuilder};
 use crate::lexer::{Tokenizer, Lexer};
 use crate::global_actions::{TokenActions};
 
@@ -22,17 +22,14 @@ enum TestTokens
 }
 
 
-
-
-
 fn get_test_definitions() -> Result<Vec<TokenDefinition<TestTokens>>, regex::Error>
 {
-    let tt = TestTokens::OneTwoThree as u32;
-    let mut definitions : Vec<TokenDefinition<TestTokens>> = Vec::new();
-    definitions.add_token(TestTokens::OneTwoThree, "(?P<gr>123)", 0, None)?;
-    definitions.add_token(TestTokens::ThreeTwoOne, r"321", 0, None)?;
-    definitions.add_token(TestTokens::Zero, r"000", 0, Some(["000", "ZERO"]))?;
-    Ok(definitions)
+    let mut builder = TokenDefinitionsBuilder::<TestTokens>::new();
+    let defs = builder
+    .add_def(TestTokens::OneTwoThree, "(?P<gr>123)", 0, None)?
+    .add_def(TestTokens::ThreeTwoOne, r"321", 0, None)?
+    .add_def(TestTokens::Zero, r"000", 0, Some(["000", "ZERO"]))?.build();
+    Ok(defs)
 }
 fn get_definitions() -> Option<Vec<TokenDefinition<TestTokens>>>
 {

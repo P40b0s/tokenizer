@@ -58,17 +58,27 @@ impl<T> TokenDefinition<T> where T : Clone
     }
 }
 
-pub trait AddToken<T> where T: Clone
+pub struct TokenDefinitionsBuilder<T>(Vec<TokenDefinition<T>>) where T: Clone;
+impl<T> TokenDefinitionsBuilder<T> where T: Clone
 {
-    fn add_token(&mut self, return_token : T, regex_pattern : &str, precedence : u8, converter : Option<[&str; 2]>) -> Result<(), Error>;
-}
-
-impl<T> AddToken<T> for Vec<TokenDefinition<T>> where T: Clone
-{
-    fn add_token(&mut self, return_token : T, regex_pattern : &str, precedence : u8, converter : Option<[&str; 2]>) -> Result<(), Error>
+    pub fn new() -> Self
     {
-        let mut  token = TokenDefinition::new(return_token, regex_pattern, precedence,converter)?;
-        self.push(token);
-        Ok(())
+        let  v : Vec<TokenDefinition<T>> = vec![];
+        let builder = TokenDefinitionsBuilder(v);
+        builder
+    }
+    ///Добавить связки токенов и др.
+    pub fn add_def(&mut self, return_token : T, regex_pattern : &str, precedence : u8, converter : Option<[&str; 2]>) -> Result<&mut Self, Error>
+    {
+        let token = TokenDefinition::new(return_token, regex_pattern, precedence,converter)?;
+        self.0.push(token);
+        Ok(self)
+    }
+    ///Вернуть массив определений токенов
+    pub fn build(&mut self) -> Vec<TokenDefinition<T>>
+    {
+        self.0.clone()
     }
 }
+
+
