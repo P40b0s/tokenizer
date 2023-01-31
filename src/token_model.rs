@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::{lexer::Lexer, token::Token};
+use crate::{lexer::Lexer, token::Token, token_actions::TokenActions};
 
 
 #[derive(Clone)]
@@ -33,5 +33,13 @@ impl<'a, T> TokenModel<'a, T> where T : PartialEq
             tokens.push(token);
         }
         tokens
+    }
+}
+
+impl<'a, T> TokenActions for TokenModel<'a,T> where T : PartialEq 
+{
+    fn get_value(&self) -> &str
+    {
+        &self.token.value
     }
 }

@@ -133,13 +133,20 @@ impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialE
     fn take_forward_while_predicate(&self,
         predicate : &dyn Fn(&Token<T>) -> bool) -> Vec<TokenModel<T>>
     {
-        let mut start_position = self.token.position +1;
+        let start_position = self.token.position +1;
         let mut tokens : Vec<TokenModel<T>> = Vec::new();
         for t in self.tokens
         {
-            if (t.position >= start_position) && predicate(t)
+            if t.position >= start_position
             {
+                if !predicate(t)
+                {
+                    break;
+                }
+                else
+                {
                     tokens.push(TokenModel { token : t, tokens : self.tokens});
+                }
             }
         }
         tokens
@@ -148,13 +155,20 @@ impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialE
     fn take_forward_while(&self,
     searched : &[T]) -> Vec<TokenModel<T>>
     {
-    let mut start_position = self.token.position +1;
+    let start_position = self.token.position +1;
     let mut tokens : Vec<TokenModel<T>> = Vec::new();
     for t in self.tokens
     {
-        if (t.position >= start_position) && searched.contains(&t.token_type)
+        if t.position >= start_position
         {
-            tokens.push(TokenModel { token : t, tokens : self.tokens});
+            if !searched.contains(&t.token_type)
+            {
+                break;
+            }
+            else
+            {
+                tokens.push(TokenModel { token : t, tokens : self.tokens});
+            }
         }
     }
     tokens

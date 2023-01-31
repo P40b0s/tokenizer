@@ -5,7 +5,7 @@ use crate::forward_actions::ForwardTokenActions;
 use crate::backward_actions::BackwardTokenActions;
 use crate::token_definition::{TokenDefinition, TokenDefinitionsBuilder};
 use crate::lexer::{Tokenizer, Lexer};
-use crate::global_actions::{TokenActions};
+use crate::global_actions::{GlobalActions};
 
 
 pub trait CreateDefinitions where Self: Clone
@@ -48,7 +48,7 @@ fn next_skip_one_test()
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
     let lexer = Lexer::tokenize(text, get_definitions().unwrap());
-    let actions = TokenActions::new(&lexer);
+    let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
         if let Some(next) = first.next(1)
@@ -65,7 +65,7 @@ fn converter_test()
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
     let lexer = Lexer::tokenize(text, get_definitions().unwrap());
-    let actions = TokenActions::new(&lexer);
+    let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
         if let Some(next) = first.next(1)
@@ -80,7 +80,7 @@ fn before_skip_one_test()
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
     let lexer = Lexer::tokenize(text, get_definitions().unwrap());
-    let actions = TokenActions::new(&lexer);
+    let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::Zero)
     {
         if let Some(next) = first.next(0)
@@ -95,7 +95,7 @@ fn find_forward_test()
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
     let lexer = Lexer::tokenize(text, get_definitions().unwrap());
-    let actions = TokenActions::new(&lexer);
+    let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
         if let Some(next) = first.find_forward(&[TestTokens::Zero], 2, false)
@@ -110,7 +110,7 @@ fn find_backward_test()
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
     let lexer = Lexer::tokenize(text, get_definitions().unwrap());
-    let actions = TokenActions::new(&lexer);
+    let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::Zero)
     {
         if let Some(next) = first.find_backward(TestTokens::OneTwoThree, 2)
