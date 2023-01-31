@@ -1,0 +1,19 @@
+
+[package]
+name = "tokenizer-derive"
+version = "0.10.0"
+authors = ["Aleks xar <p40b0s@google.com>"]
+description = "Create ridiculously fast Lexers"
+repository = "https://github.com/p40b0s/tokenizer"
+keywords = ["lexer", "tokenizer", "parser"]
+categories = ["parsing", "text-processing"]
+#readme = "../README.md"
+edition = "2021"
+
+[lib]
+name = "tokenizer_derive"
+proc-macro = true
+
+[dependencies]
+syn = { features = ["full"], version = "1.0.107" }
+quote = "1.0.23"
