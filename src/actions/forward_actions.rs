@@ -13,8 +13,8 @@ pub trait ForwardTokenActions<'a, T> where T :  PartialEq + Clone
     ///Поиск токенов вниз по массиву, вернется любой найденный токен кроме указанных в функции `ignore_tokens`
     fn find_forward_first_ignore(&self, ignore_tokens : &dyn Fn(&Token<T>) -> bool) -> Option<TokenModel<T>>;
     ///Берет указанные токены пока не встретиться отличный от них
-    fn take_forward_while_predicate(&self, predicate : &dyn Fn(&Token<T>) -> bool, with_self : bool) -> Vec<TokenModel<T>>;
-    fn take_forward_while(&self,tokens : &[T],with_self : bool) -> Vec<TokenModel<T>>;
+    fn take_forward_while_predicate(&self, predicate : &dyn Fn(&Token<T>) -> bool) -> Vec<TokenModel<T>>;
+    fn take_forward_while(&self,tokens : &[T]) -> Vec<TokenModel<T>>;
 }
 
 impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialEq + Clone
@@ -131,15 +131,10 @@ impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialE
 
     ///Ищем один из заданных токенов, игнорируем заданные токены, если встречается токен отличный от игнорируемых или заданных то поиск закончится
     fn take_forward_while_predicate(&self,
-        predicate : &dyn Fn(&Token<T>) -> bool,
-        with_self : bool) -> Vec<TokenModel<T>>
+        predicate : &dyn Fn(&Token<T>) -> bool) -> Vec<TokenModel<T>>
     {
-        let mut start_position = self.token.position;
+        let mut start_position = self.token.position +1;
         let mut tokens : Vec<TokenModel<T>> = Vec::new();
-        if !with_self
-        {
-            start_position = self.token.position +1;
-        }
         for t in self.tokens
         {
             if (t.position >= start_position) && predicate(t)
@@ -151,15 +146,10 @@ impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialE
     }
 
     fn take_forward_while(&self,
-    searched : &[T],
-    with_self : bool) -> Vec<TokenModel<T>>
+    searched : &[T]) -> Vec<TokenModel<T>>
     {
-    let mut start_position = self.token.position;
+    let mut start_position = self.token.position +1;
     let mut tokens : Vec<TokenModel<T>> = Vec::new();
-    if !with_self
-    {
-        start_position = self.token.position +1;
-    }
     for t in self.tokens
     {
         if (t.position >= start_position) && searched.contains(&t.token_type)
