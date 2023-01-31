@@ -26,9 +26,9 @@ fn get_test_definitions() -> Result<Vec<TokenDefinition<TestTokens>>, regex::Err
 {
     let mut builder = TokenDefinitionsBuilder::<TestTokens>::new();
     let defs = builder
-    .add_def(TestTokens::OneTwoThree, "(?P<gr>123)", 0, None)?
-    .add_def(TestTokens::ThreeTwoOne, r"321", 0, None)?
-    .add_def(TestTokens::Zero, r"000", 0, Some(["000", "ZERO"]))?.build();
+    .add_custom_def(TestTokens::OneTwoThree, "(?P<gr>123)", 0, None)?
+    .add_custom_def(TestTokens::ThreeTwoOne, r"321", 0, None)?
+    .add_custom_def(TestTokens::Zero, r"000", 0, Some(["000", "ZERO"]))?.build();
     Ok(defs)
 }
 fn get_definitions() -> Option<Vec<TokenDefinition<TestTokens>>>
