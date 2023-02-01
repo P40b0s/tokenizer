@@ -1,4 +1,6 @@
-use crate::{token_model::TokenModel, token::Token};
+use std::rc::Rc;
+
+use crate::{token_model::TokenModel, token::Token, TokenActions};
 
 
 pub trait BackwardTokenActions<T> where T :  PartialEq + Clone
@@ -21,26 +23,20 @@ impl<T> BackwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
     ///в моей C# версии парсера было 2 метода - от позиции и от старт индекса, оставлю от старт индекса это точно уникальное число
     fn before(&self, skip : usize) -> Option<TokenModel<T>>
     {
-        let start = self.
-                                            tokens.
-                                            iter().
-                                            find(|f|f.end_index == self.token.end_index);
-        if  start.is_some()
-        {
-            let founded = self.
-                                                tokens.
-                                                iter().
-                                                find(|f|f.position == start.unwrap().position -1 - skip);
-            return Some(TokenModel { token : founded.unwrap(), tokens : self.tokens});
-        }
-        None
+        let token = self.get_tokens()
+                                    .find(|f|f.position == (self.get_position() - 1 - skip))?;
+
+        let model = self.to_token_model(token);
+        Some(model)
     }
     fn before_is(&self, before : T, skip : usize) -> bool
     {
-        let n = self.before(skip);
-        if n.is_some() && n.unwrap().token.token_type == before
+        if let Some(n) = self.before(skip)
         {
-            return true;
+            if n.token.eq_type(&before)
+            {
+                return true;
+            }
         }
         false
     }
@@ -57,27 +53,24 @@ impl<T> BackwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
         }
         let mut deep = 0;
         //клонируем, так как нам не нужен перевернутый массив в оригинале
-        let mut tmp_tokens = self.tokens.clone();
-        tmp_tokens.reverse();
-        for t in &tmp_tokens
+        let original = Rc::as_ref(&self.tokens);
+        if original.len() > 0
         {
-            if t.position <= start_position
+            let len = original.len() -1;
+            for i in (0usize.. len).rev()
             {
-                if searched_tokens(t)
+                let val = original.iter().nth(i)?;
+                if val.start_index <= start_position
                 {
-                    //если находим нужный токет, то ищем его в основном массиве и возвращаем ссылку
-                    if let Some(t) = self.
-                    tokens.
-                    iter().
-                    find(|f|f.end_index == t.end_index)
+                    if searched_tokens(val)
                     {
-                        return Some(TokenModel { token : t, tokens : self.tokens});
+                        return Some(self.to_token_model(val));
                     }
-                }
-                deep = deep + 1;
-                if deep == max_deep
-                {
-                    break;
+                    deep = deep + 1;
+                    if deep == max_deep
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -95,46 +88,69 @@ impl<T> BackwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
         {
             start_position = self.token.position - 1;
         }
-        let mut tmp_tokens = self.tokens.clone();
-        tmp_tokens.reverse();
-        for t in &tmp_tokens
+        let original = Rc::as_ref(&self.tokens);
+        if original.len() > 0
         {
-            if t.position <= start_position && (searched_tokens(t) || ignored_tokens(t))
+            let len = original.len() -1;
+            for i in (0usize.. len).rev()
             {
-                if searched_tokens(t)
+                if let Some(val) = original.iter().nth(i)
                 {
-                    if let Some(t) = self.
-                    tokens.
-                    iter().
-                    find(|f|f.end_index == t.end_index)
+                    if val.start_index <= start_position
                     {
-                        tokens.push(TokenModel { token : t, tokens : self.tokens});
+                        if searched_tokens(val)
+                        {
+                            tokens.push(self.to_token_model(val));
+                        }
+                        if ignored_tokens(val)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    
                 }
             }
         }
+        // let mut tmp_tokens = *link.clone();
+        // tmp_tokens.reverse();
+        // for t in &tmp_tokens
+        // {
+        //     if t.token.position <= start_position
+        //     {
+        //         if searched_tokens(&t.token)
+        //         {
+        //             tokens.push(t);
+        //         }
+        //         if ignored_tokens(&t.token)
+        //         {
+        //             continue;
+        //         }
+        //         else
+        //         {
+        //             break;
+        //         }
         tokens
     }
     ///Поиск токенов вниз по массиву, вернется любой найденный токен кроме указанных в функции `ignore_tokens`
     fn find_backward_ignore(&self,
         ignore_tokens : &dyn Fn(&Token<T>) -> bool) -> Option<TokenModel<T>>
     {
-        let mut tmp_tokens = self.tokens.clone();
-        tmp_tokens.reverse();
-        for t in &tmp_tokens
+        let original = Rc::as_ref(&self.tokens);
+        if original.len() > 0
         {
-            if t.start_index <= self.token.start_index
+            let len = original.len() -1;
+            for i in (0usize.. len).rev()
             {
-                if !ignore_tokens(t)
+                let val = original.iter().nth(i)?;
+                if val.start_index <= self.token.start_index
                 {
-                    if let Some(t) = self.
-                    tokens.
-                    iter().
-                    find(|f|f.end_index == t.end_index)
+                    if !ignore_tokens(val)
                     {
-                        return Some(TokenModel { token : t, tokens : self.tokens});
-                    } 
+                        return Some(self.to_token_model(val));
+                    }
                 }
             }
         }

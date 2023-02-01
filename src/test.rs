@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::rc::{Rc, Weak};
 
 use crate::Token;
 use crate::forward_actions::ForwardTokenActions;
@@ -47,8 +48,8 @@ fn get_definitions() -> Option<Vec<TokenDefinition<TestTokens>>>
 fn next_skip_one_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
-    let lexer = Lexer::tokenize(text, get_definitions().unwrap());
-    let actions = GlobalActions::new(&lexer);
+    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+    //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
         if let Some(next) = first.next(1)
@@ -64,8 +65,8 @@ fn next_skip_one_test()
 fn converter_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
-    let lexer = Lexer::tokenize(text, get_definitions().unwrap());
-    let actions = GlobalActions::new(&lexer);
+    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+   //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
         if let Some(next) = first.next(1)
@@ -79,8 +80,8 @@ fn converter_test()
 fn before_skip_one_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
-    let lexer = Lexer::tokenize(text, get_definitions().unwrap());
-    let actions = GlobalActions::new(&lexer);
+    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+    //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::Zero)
     {
         if let Some(next) = first.next(0)
@@ -94,8 +95,8 @@ fn before_skip_one_test()
 fn find_forward_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
-    let lexer = Lexer::tokenize(text, get_definitions().unwrap());
-    let actions = GlobalActions::new(&lexer);
+    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+    //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
         if let Some(next) = first.find_forward(&[TestTokens::Zero], 2, false)
@@ -109,8 +110,8 @@ fn find_forward_test()
 fn find_backward_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
-    let lexer = Lexer::tokenize(text, get_definitions().unwrap());
-    let actions = GlobalActions::new(&lexer);
+    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+    //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::Zero)
     {
         if let Some(next) = first.find_backward(TestTokens::OneTwoThree, 2)
@@ -120,3 +121,4 @@ fn find_backward_test()
         } 
     }
 }
+

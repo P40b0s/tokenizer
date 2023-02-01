@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use regex::Captures;
 
 use crate::token_definition::TokenDefinition;

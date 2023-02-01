@@ -1,7 +1,7 @@
 use crate::{matches::GroupMatch};
 
 #[derive(Clone)]
-pub struct Token<T> where T: PartialEq
+pub struct Token<T> where T: PartialEq + Clone
 {
     pub token_type : T,
     pub value : String,
@@ -13,7 +13,7 @@ pub struct Token<T> where T: PartialEq
     pub groups : Vec<GroupMatch>
 }
 
-impl<T> PartialEq for Token<T> where T: PartialEq 
+impl<T> PartialEq for Token<T> where T: PartialEq + Clone
 {
     fn eq(&self, other: &Self) -> bool 
     {
@@ -21,9 +21,9 @@ impl<T> PartialEq for Token<T> where T: PartialEq
     }
 }
 
-impl<T> Eq for Token<T> where T: Eq {}
+impl<T> Eq for Token<T> where T: Eq + Clone{}
 
-impl<T> Token<T> where T : PartialEq
+impl<T> Token<T> where T : PartialEq+ Clone
 {
     ///Получение пустой структуры для сравнения (почему то напрямую T мы сравнивать не можем)
     // pub fn get_equality_token(token_type : T) -> Token<T>
@@ -64,5 +64,9 @@ impl<T> Token<T> where T : PartialEq
     pub fn eq_type(&self, ttype : &T) -> bool
     {
         self.token_type == *ttype
+    }
+    pub fn eq_pos(&self, position: usize) -> bool
+    {
+        self.position == position
     }
 }

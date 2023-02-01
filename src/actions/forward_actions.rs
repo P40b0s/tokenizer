@@ -1,4 +1,6 @@
-use crate::{token_model::TokenModel, token::Token};
+use std::rc::Rc;
+
+use crate::{token_model::TokenModel, token::Token, TokenActions};
 
 
 
@@ -23,27 +25,20 @@ impl<T> ForwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
     ///Получает следующий по массиву токен, если skip = 0
     fn next(&self, skip : usize) -> Option<TokenModel<T>>
     {
-        let find_self = self.
-                                            tokens.
-                                            iter().
-                                            find(|f|f.start_index == self.token.start_index)?;
-       
-        let founded = self.
-                                            tokens.
-                                            iter().
-                                            find(|f|f.position == find_self.position +1 + skip);
-            if founded.is_some()
-            {
-                return Some(TokenModel { token : founded.unwrap(), tokens : self.tokens});
-            }
-        None
+        let founded = self.get_tokens()
+                                .find(|f|f.position == (self.get_position() +1 + skip))?;
+        let model = self.to_token_model(founded);
+        Some(model)
     }
+
     fn next_is(&self, next : T, skip : usize) -> bool
     {
-        let n = self.next(skip);
-        if n.is_some() && n.unwrap().token.token_type == next
+        if let Some(n) = self.next(skip)
         {
-            return true;
+            if n.token.eq_type(&next)
+            {
+                return true;
+            }
         }
         false
     }
@@ -59,13 +54,15 @@ impl<T> ForwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
             start_position = self.token.position +1;
         }
         let mut deep = 0;
-        for t in self.tokens
+        let len = self.tokens.len() -1;
+        for i in 0usize.. len
         {
-            if t.position >= start_position
+            let val = self.get_tokens().nth(i)?;
+            if val.position >= start_position
             {
-                if searched_tokens.contains(&t.token_type)
+                if searched_tokens.contains(&val.token_type)
                 {
-                    return Some(TokenModel { token : t, tokens : self.tokens});
+                    return Some(self.to_token_model(val));
                 }
                 deep = deep + 1;
                 if deep == max_deep
@@ -87,14 +84,22 @@ impl<T> ForwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
         if !with_self
         {
             start_position = self.token.position +1;
-        }
-        for t in self.tokens
+        }  
+        for t in Rc::as_ref(&self.tokens)
         {
-            if t.position >= start_position && (searched_tokens(t) || ignored_tokens(t))
+            if t.position >= start_position
             {
-                if searched_tokens(t)
+                if searched_tokens(&t)
                 {
-                    tokens.push(TokenModel { token : t, tokens : self.tokens});
+                    tokens.push(self.to_token_model(t));
+                }
+                if ignored_tokens(&t)
+                {
+                    continue;
+                }
+                else
+                {
+                    break;
                 }
             }
         }
@@ -104,13 +109,13 @@ impl<T> ForwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
     fn find_forward_first_ignore(&self,
         ignore_tokens : &dyn Fn(&Token<T>) -> bool) -> Option<TokenModel<T>>
     {
-        for t in self.tokens
+        for t in Rc::as_ref(&self.tokens)
         {
             if t.start_index >= self.token.start_index
             {
-                if !ignore_tokens(t)
+                if !ignore_tokens(&t)
                 {
-                    return Some(TokenModel { token : t, tokens : self.tokens});
+                    return Some(self.to_token_model(t));
                 }
             }
         }
@@ -132,42 +137,41 @@ impl<T> ForwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
     {
         let start_position = self.token.position +1;
         let mut tokens : Vec<TokenModel<T>> = Vec::new();
-        for t in self.tokens
+        for t in Rc::as_ref(&self.tokens)
         {
             if t.position >= start_position
             {
-                if !predicate(t)
+                if !predicate(&t)
                 {
                     break;
                 }
                 else
                 {
-                    tokens.push(TokenModel { token : t, tokens : self.tokens});
+                    tokens.push(self.to_token_model(t));
                 }
             }
         }
         tokens
     }
 
-    fn take_forward_while(&self,
-    searched : &[T]) -> Vec<TokenModel<T>>
+    fn take_forward_while(&self,searched : &[T]) -> Vec<TokenModel<T>>
     {
-    let start_position = self.token.position +1;
-    let mut tokens : Vec<TokenModel<T>> = Vec::new();
-    for t in self.tokens
-    {
-        if t.position >= start_position
+        let start_position = self.token.position +1;
+        let mut tokens : Vec<TokenModel<T>> = Vec::new();
+        for t in Rc::as_ref(&self.tokens)
         {
-            if !searched.contains(&t.token_type)
+            if t.position >= start_position
             {
-                break;
-            }
-            else
-            {
-                tokens.push(TokenModel { token : t, tokens : self.tokens});
+                if !searched.contains(&t.token_type)
+                {
+                    break;
+                }
+                else
+                {
+                    tokens.push(self.to_token_model(t));
+                }
             }
         }
-    }
-    tokens
+        tokens
     }
 }

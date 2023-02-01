@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Mutex, rc::Rc, cell::RefCell};
+use std::{collections::HashMap};
 
 use crate::matches::{GroupMatch};
 use regex::{Regex, Error};

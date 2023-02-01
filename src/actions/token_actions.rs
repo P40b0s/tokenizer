@@ -1,11 +1,13 @@
-use std::{borrow::Cow, rc::Rc};
+use crate::{Token, token_model::TokenModel};
 
-
-
-pub trait TokenActions
+pub trait TokenActions<T> where T: PartialEq + Clone
 {
     ///Возвращает значение токена
     fn get_value(&self) -> &str;
     fn get_default_group(&self) -> Option<&str>;
     fn get_group(&self, group_number: usize) -> Option<&str>;
+    fn get_position(&self) -> usize;
+    fn get_tokentype(&self) -> &T;
+    fn get_tokens(&self)-> core::slice::Iter<Token<T>>;
+    fn to_token_model(&self, t: &Token<T>) -> TokenModel<T>;
 }

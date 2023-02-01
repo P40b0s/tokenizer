@@ -1,7 +1,7 @@
 
 
 use std::{collections::HashMap, rc::Rc};
-use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token};
+use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token, token_model::TokenModel, GlobalActions};
 use itertools::Itertools;
 
 pub trait Tokenizer<T> where T : PartialEq + Clone
@@ -50,19 +50,19 @@ pub trait Tokenizer<T> where T : PartialEq + Clone
     ///    }
     ///}
     /// ```
-    fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)->  Lexer<T>;
+    fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)->  GlobalActions<T>;
 }
 /// В начале нужно запустить лексер, он найдет все токены с заданными `TokenDefinition`
 /// Затем оборачиваем лексер в TokenActions и можем работать с токенами
-pub struct Lexer<T> where T : PartialEq
+pub struct Lexer
 {
-    pub tokens : Rc<Vec<Token<T>>>
+   // tokens : Rc<Vec<Token<T>>>
 }
 
-impl<T> Tokenizer<T> for Lexer<T> where T : Copy + Clone + PartialEq
+impl<T> Tokenizer<T> for Lexer where T : Copy + Clone + PartialEq
 {
     ///Поиск токенов по текущему тексту и заданным определениям токенов
-    fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)-> Self
+    fn tokenize(text : &str, defs : Vec<TokenDefinition<T>>)-> GlobalActions<T>
     {
         let tokens_match = TokenMatch::find(defs, text);
         let mut groups : HashMap<usize, Vec<TokenMatch<T>>> = HashMap::new();
@@ -100,7 +100,25 @@ impl<T> Tokenizer<T> for Lexer<T> where T : Copy + Clone + PartialEq
                 best_match.converted);
             tokens.push(token);
         }
-        Lexer{ tokens : Rc::from(tokens) }
+        //let tokens = Rc::new(tokens);
+        //let lexer = Lexer{ tokens :  };
+        let rc = Rc::new(tokens.clone());
+        let mut tokens_for_model :Vec<TokenModel<T>> = Vec::new();
+        for lx in &tokens
+        {
+            let token = TokenModel {token : lx.to_owned(), tokens: Rc::clone(&rc)};
+            tokens_for_model.push(token);
+        }
+        // let weak_tokens = Rc::new(tokens_for_model.clone());
+        // let wk = Rc::downgrade(&weak_tokens);
+        // for cir in tokens_for_model
+        // {
+        //     cir.add_ref(wk)
+        // }
+        let ga = GlobalActions { tokens : tokens_for_model};
+        ga
+        
+        
     }
    
 }

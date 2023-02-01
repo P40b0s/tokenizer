@@ -11,7 +11,6 @@ mod forward_actions;
 #[path="actions/token_actions.rs"]
 mod token_actions;
 mod lexer;
-#[macro_use]
 extern crate lazy_static;
 mod test;
 
