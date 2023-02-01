@@ -1,15 +1,7 @@
 use std::{collections::HashMap};
 
-use crate::matches::{GroupMatch};
+//use crate::matches::{GroupMatch};
 use regex::{Regex, Error};
-impl GroupMatch
-{
-    pub fn add()
-    {
-        print!("sdsdsdsd")
-    }
-}
-
 
 #[derive(Debug, Clone)]
 ///Определение токена, определенный регекс с весом по которому будет вестись поиск в тексте
@@ -33,7 +25,6 @@ impl<T> TokenDefinition<T> where T : Clone
     pub fn new(return_token : T, regex_pattern : &str, precedence : u8, converter : Option<[&str; 2]>) -> Result<TokenDefinition<T>, Error>
     {
         let regex = Regex::new(regex_pattern)?;
-
         Ok(TokenDefinition 
         {
             return_token,

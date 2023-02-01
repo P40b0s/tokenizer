@@ -86,6 +86,9 @@ impl<T> TokenMatch<T> where T : Copy
             let matches = def.get_regex().find_iter(input);
             let captures = def.get_regex().captures(input);
             let groups = TokenMatch::get_groups(&def, captures);
+            //Из 3 попаданий в группах почему то захватывается только одна группа
+            //и получается что в нижнем переборе 3 разных значения но группа только первая доля всех!
+            
             
             for m in matches
             {
@@ -108,7 +111,8 @@ impl<T> TokenMatch<T> where T : Copy
         if cpt.is_some()
         {
             let captures = cpt.unwrap();
-            def.get_regex().capture_names().for_each(|n|{
+            def.get_regex().capture_names().for_each(|n|
+            {
                 if n.is_some()
                 {
                     let name = n.unwrap();
