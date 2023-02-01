@@ -2,7 +2,7 @@ use crate::{token_model::TokenModel, token::Token};
 
 
 
-pub trait ForwardTokenActions<'a, T> where T :  PartialEq + Clone
+pub trait ForwardTokenActions<T> where T :  PartialEq + Clone
 {
     fn next(&self, skip : usize) -> Option<TokenModel<T>>;
     fn next_is(&self, next : T, skip : usize) -> bool;
@@ -17,28 +17,25 @@ pub trait ForwardTokenActions<'a, T> where T :  PartialEq + Clone
     fn take_forward_while(&self,tokens : &[T]) -> Vec<TokenModel<T>>;
 }
 
-impl<'a, T> ForwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialEq + Clone
+impl<T> ForwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
 {
     
     ///Получает следующий по массиву токен, если skip = 0
     fn next(&self, skip : usize) -> Option<TokenModel<T>>
     {
-        let start = self.
+        let find_self = self.
                                             tokens.
                                             iter().
-                                            find(|f|f.start_index == self.token.start_index);
-        if  start.is_some()
-        {
-            let founded = self.
-                                                tokens.
-                                                iter().
-                                                find(|f|f.position == start.unwrap().position +1 + skip);
+                                            find(|f|f.start_index == self.token.start_index)?;
+       
+        let founded = self.
+                                            tokens.
+                                            iter().
+                                            find(|f|f.position == find_self.position +1 + skip);
             if founded.is_some()
             {
                 return Some(TokenModel { token : founded.unwrap(), tokens : self.tokens});
             }
-            
-        }
         None
     }
     fn next_is(&self, next : T, skip : usize) -> bool

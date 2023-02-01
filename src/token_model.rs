@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, rc::Rc};
 
 use crate::{lexer::Lexer, token::Token, token_actions::TokenActions};
 
@@ -7,12 +7,12 @@ use crate::{lexer::Lexer, token::Token, token_actions::TokenActions};
 /// после получения массива токенов нам нужно разделить их на ссылку на токен и на ссылку на массив токенов
 /// это необходимо для удобства дальнейшей работы с токенами
 /// в дальнейшем эту структуру оборачиваем в `TokenActions` и можем работать с токенами, эта логика уже есть в TokenActions, поэтому непосредственно эту структуру использовать нет необходимости
-pub struct TokenModel<'a, T>  where T : PartialEq
+pub struct TokenModel<T>  where T : PartialEq
 {
-    pub token : &'a Token<T>,
-    pub tokens : &'a Vec<Token<T>>,
+    pub token : Rc<Token<T>>,
+    pub tokens : Rc<Vec<Token<T>>>,
 }
-impl<'a, T> PartialEq for TokenModel<'a, T> where T: PartialEq 
+impl<T> PartialEq for TokenModel<T> where T: PartialEq 
 {
     fn eq(&self, other: &Self) -> bool 
     {
@@ -20,26 +20,37 @@ impl<'a, T> PartialEq for TokenModel<'a, T> where T: PartialEq
     }
 }
 
-impl<'a, T> Eq for TokenModel<'a, T> where T: Eq {}
+impl<T> Eq for TokenModel<T> where T: Eq {}
 
-impl<'a, T> TokenModel<'a, T> where T : PartialEq
+impl<T> TokenModel<T> where T : PartialEq
 {
-    pub fn new(lexer: &'a Lexer<T>) -> Vec<TokenModel<'a, T>>
+    pub fn new(lexer: &Lexer<T>) -> Vec<TokenModel<T>>
     {
-        let mut tokens : Vec<TokenModel<'a, T>> = Vec::new();
-        for lx in &lexer.tokens
+        let mut tokens :Vec<TokenModel<T>> = Vec::new();
+        for lx in *lexer.tokens
         {
-            let token = TokenModel {token : lx, tokens : &lexer.tokens};
+            let token = TokenModel {token : Rc::new(lx), tokens : Rc::clone(&lexer.tokens)};
             tokens.push(token);
         }
         tokens
     }
 }
 
-impl<'a, T> TokenActions for TokenModel<'a,T> where T : PartialEq 
+impl<T> TokenActions for TokenModel<T> where T : PartialEq 
 {
     fn get_value(&self) -> &str
     {
         &self.token.value
+    }
+    fn get_default_group(&self) -> Option<&str> 
+    {
+       let def = self.get_group(0)?;
+       Some(def)
+    }
+    fn get_group(&self, group_number: usize) -> Option<&str> 
+    {
+        let gr = self.token.groups.iter().nth(group_number)?;
+        let val = gr.get_value();
+        Some(val)
     }
 }

@@ -2,18 +2,18 @@ use crate::{lexer::Lexer, token_model::TokenModel};
 
 ///После получения структуры TokenModel создаем на основе нее структуру TokenActions
 ///Глобально получает необходимый токен из массива
-pub struct GlobalActions<'a, T> where T :  PartialEq + Clone
+pub struct GlobalActions<T> where T :  PartialEq + Clone
 {
-    pub tokens : Vec<TokenModel<'a, T>>,
+    pub tokens : Vec<TokenModel<T>>,
 }
-impl<'a, T> GlobalActions<'a, T> where T :  PartialEq + Clone
+impl<T> GlobalActions<T> where T :  PartialEq + Clone
 {
     // pub fn new2(lexer : Lexer<T>) -> TokenActions<'a, T>
     // {
     //     let toks = TokenModel::new(&lexer);
     //     TokenActions { tokens : toks, lexer}
     // }
-    pub fn new(lexer : &'a Lexer<T>) -> GlobalActions<T>
+    pub fn new(lexer : &Lexer<T>) -> GlobalActions<T>
     {
         let toks = TokenModel::new(lexer);
         GlobalActions { tokens : toks}

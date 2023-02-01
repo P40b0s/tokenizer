@@ -1,7 +1,7 @@
 use crate::{token_model::TokenModel, token::Token};
 
 
-pub trait BackwardTokenActions<'a, T> where T :  PartialEq + Clone
+pub trait BackwardTokenActions<T> where T :  PartialEq + Clone
 {
     fn before(&self, skip : usize) -> Option<TokenModel<T>>;
     fn before_is(&self, next : T, skip : usize) -> bool;
@@ -15,7 +15,7 @@ pub trait BackwardTokenActions<'a, T> where T :  PartialEq + Clone
     fn find_backward(&self, searched_token : T, max_deep : usize) -> Option<TokenModel<T>>;
 }
 
-impl<'a, T> BackwardTokenActions<'a, T> for TokenModel<'a, T> where T :  PartialEq + Clone
+impl<T> BackwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
 {
     
     ///в моей C# версии парсера было 2 метода - от позиции и от старт индекса, оставлю от старт индекса это точно уникальное число

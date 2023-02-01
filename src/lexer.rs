@@ -1,6 +1,6 @@
 
 
-use std::{collections::HashMap};
+use std::{collections::HashMap, rc::Rc};
 use crate::{token_definition::TokenDefinition, matches::TokenMatch, token::Token};
 use itertools::Itertools;
 
@@ -56,7 +56,7 @@ pub trait Tokenizer<T> where T : PartialEq + Clone
 /// Затем оборачиваем лексер в TokenActions и можем работать с токенами
 pub struct Lexer<T> where T : PartialEq
 {
-    pub tokens : Vec<Token<T>>
+    pub tokens : Rc<Vec<Token<T>>>
 }
 
 impl<T> Tokenizer<T> for Lexer<T> where T : Copy + Clone + PartialEq
@@ -100,7 +100,7 @@ impl<T> Tokenizer<T> for Lexer<T> where T : Copy + Clone + PartialEq
                 best_match.converted);
             tokens.push(token);
         }
-        Lexer{ tokens }
+        Lexer{ tokens : Rc::from(tokens) }
     }
    
 }

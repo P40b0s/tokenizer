@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use regex::Captures;
 
 use crate::token_definition::TokenDefinition;
@@ -25,6 +27,23 @@ impl GroupMatch
             lenght
         }
     }
+    pub fn get_start_index(&self)-> usize
+    {
+        self.start_index
+    }
+    pub fn get_end_index(&self)-> usize
+    {
+        self.end_index
+    }
+    pub fn get_lenght(&self)-> usize
+    {
+        self.lenght
+    }
+    pub fn get_value(&self)-> &str
+    {
+        self.value.as_ref()
+    }
+    
 }
 #[derive(Debug, Clone)]
 pub struct TokenMatch<T>
