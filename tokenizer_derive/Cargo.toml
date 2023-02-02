@@ -1,6 +1,6 @@
 
 [package]
-name = "tokenizer-derive"
+name = "tokenizer_derive"
 version = "0.10.0"
 authors = ["Aleks xar <p40b0s@google.com>"]
 description = "Create ridiculously fast Lexers"
@@ -17,3 +17,4 @@ proc-macro = true
 [dependencies]
 syn = { features = ["full"], version = "1.0.107" }
 quote = "1.0.23"
+#proc-macro2="*"

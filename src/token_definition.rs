@@ -1,7 +1,14 @@
 use std::{collections::HashMap};
-
 //use crate::matches::{GroupMatch};
-use regex::{Regex, Error};
+use regex::{Regex, Error, Matches, Captures};
+
+pub trait Definitions<T> where T: Clone
+{
+	fn get_defs() -> Vec<TokenDefinition<T>>;
+}
+
+
+
 
 #[derive(Debug, Clone)]
 ///Определение токена, определенный регекс с весом по которому будет вестись поиск в тексте
@@ -42,6 +49,7 @@ impl<T> TokenDefinition<T> where T : Clone
             }
         })
     }
+    
 
     pub fn get_regex(&self)-> &Regex
     {

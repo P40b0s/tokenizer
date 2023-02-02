@@ -84,20 +84,29 @@ impl<T> TokenMatch<T> where T : Copy
         definitions.into_iter().for_each(|def| 
         {
             let matches = def.get_regex().find_iter(input);
+            let all_captures = def.get_regex().captures_iter(input);
             let captures = def.get_regex().captures(input);
             let groups = TokenMatch::get_groups(&def, captures);
             //Из 3 попаданий в группах почему то захватывается только одна группа
             //и получается что в нижнем переборе 3 разных значения но группа только первая доля всех!
-            
-            
+            for caps in all_captures
+            {
+                let zero = caps.get(0).unwrap();
+                println!("{}", zero.as_str());
+            }
             for m in matches
             {
+                //Получаем список захваченныхгрупп у данного текста
+                //0 группа всегда вхождение целиком
+                //пока думаю...
                 let mut converted : Option<String> = None;
-                if def.converter.is_some() && def.converter.as_ref().unwrap().contains_key(m.as_str())
+                if let Some(conv) = &def.converter 
                 {
-                    converted = Some(def.converter.as_ref().unwrap().get(m.as_str()).unwrap().clone());
+                    if conv.contains_key(m.as_str())
+                    {
+                        converted = Some(conv.get(m.as_str()).unwrap().clone());
+                    } 
                 }
-                //let def = def.clone();
                 let token = TokenMatch::new(def.return_token, m.as_str(), groups.to_vec(), converted, m.start(), m.end(), def.precedence);
                 tokens.push(token);
             }

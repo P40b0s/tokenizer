@@ -15,7 +15,7 @@ extern crate lazy_static;
 mod test;
 
 
-pub use token_definition::{TokenDefinition, TokenDefinitionsBuilder};
+pub use token_definition::{TokenDefinition, Definitions, TokenDefinitionsBuilder};
 pub use lexer::{Lexer, Tokenizer};
 pub use backward_actions::BackwardTokenActions;
 pub use forward_actions::ForwardTokenActions;

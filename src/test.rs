@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 use std::rc::{Rc, Weak};
 
+use tokenizer_derive::Tokenizer;
+
 use crate::Token;
 use crate::forward_actions::ForwardTokenActions;
 use crate::backward_actions::BackwardTokenActions;
-use crate::token_definition::{TokenDefinition, TokenDefinitionsBuilder};
+use crate::token_definition::{TokenDefinition, Definitions, TokenDefinitionsBuilder};
 use crate::lexer::{Tokenizer, Lexer};
 use crate::global_actions::{GlobalActions};
 
@@ -15,12 +17,24 @@ pub trait CreateDefinitions where Self: Clone
 }
 
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
 enum TestTokens
 {
+    #[token(pattern="123321")]
+    #[token(precedence="3")]
+    #[token(converter="123>321")]
     OneTwoThree,
+    #[token(pattern="0000")]
     ThreeTwoOne,
+    #[token(pattern="hsdjfhwuiegf")]
     Zero
+}
+
+#[test]
+fn test_macros()
+{
+    let tt : Vec<TokenDefinition<TestTokens>> = TokenDefinition::get_defs();
+    let trtr = "";
 }
 
 
@@ -48,6 +62,29 @@ fn get_definitions() -> Option<Vec<TokenDefinition<TestTokens>>>
 fn next_skip_one_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
+    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+    //let actions = GlobalActions::new(&lexer);
+    if let Some(first) = actions.get(TestTokens::OneTwoThree)
+    {
+        if let Some(next) = first.next(1)
+        {
+            let token = next.token;
+            let skip_one = token.token_type;
+            assert_eq!(TestTokens::Zero, skip_one);
+        }
+    }
+}
+
+
+
+#[test]
+fn groups_test() 
+{
+    let text = r#"Тестирование групп
+    0=первая группа
+    1=вторая группа
+    2=третья группа
+    все конец"#;
     let actions = Lexer::tokenize(text, get_definitions().unwrap());
     //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)

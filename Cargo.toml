@@ -12,3 +12,5 @@ path = "src/lib.rs"
 regex = "1.7.1"
 itertools = "*"
 lazy_static="1.4.0"
+tokenizer_derive = {path = "./tokenizer_derive"}
+
