@@ -1,4 +1,4 @@
-use crate::token_model::TokenModel;
+use crate::TokenModel;
 
 ///После получения структуры TokenModel создаем на основе нее структуру TokenActions
 ///Глобально получает необходимый токен из массива

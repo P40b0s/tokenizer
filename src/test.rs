@@ -3,12 +3,10 @@ use std::rc::{Rc, Weak};
 
 use tokenizer_derive::Tokenizer;
 
-use crate::Token;
-use crate::forward_actions::ForwardTokenActions;
-use crate::backward_actions::BackwardTokenActions;
-use crate::token_definition::{TokenDefinition, Definitions, TokenDefinitionsBuilder};
+use crate::{Token, TokenActions};
+use crate::actions::{ForwardTokenActions, BackwardTokenActions, GlobalActions};
+use crate::token_definition::{TokenDefinition};
 use crate::lexer::{Tokenizer, Lexer};
-use crate::global_actions::{GlobalActions};
 
 
 pub trait CreateDefinitions where Self: Clone
@@ -18,55 +16,63 @@ pub trait CreateDefinitions where Self: Clone
 
 
 #[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
-enum TestTokens
+pub enum TestTokens
 {
-    #[token(pattern="123321")]
-    #[token(precedence="3")]
-    #[token(converter="123>321")]
+    #[token(pattern="(?P<gr>123)")]
     OneTwoThree,
-    #[token(pattern="0000")]
+    #[token(pattern="321")]
+    #[token(converter="*>абырвалг")]
     ThreeTwoOne,
-    #[token(pattern="hsdjfhwuiegf")]
+    #[token(pattern="000")]
+    #[token(converter="000>ZERO")]
     Zero
+}
+
+#[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
+pub enum TT
+{
+    #[token(pattern="123[[[p][]]321")]
+    #[token(precedence="3")]
+    #[token(converter="123321>321")]
+    One,
+
+    Two
 }
 
 #[test]
 fn test_macros()
 {
-    let tt : Vec<TokenDefinition<TestTokens>> = TokenDefinition::get_defs();
-    let trtr = "";
-}
-
-
-fn get_test_definitions() -> Result<Vec<TokenDefinition<TestTokens>>, regex::Error>
-{
-    let mut builder = TokenDefinitionsBuilder::<TestTokens>::new();
-    let defs = builder
-    .add_custom_def(TestTokens::OneTwoThree, "(?P<gr>123)", 0, None)?
-    .add_custom_def(TestTokens::ThreeTwoOne, r"321", 0, None)?
-    .add_custom_def(TestTokens::Zero, r"000", 0, Some(["000", "ZERO"]))?.build();
-    Ok(defs)
-}
-fn get_definitions() -> Option<Vec<TokenDefinition<TestTokens>>>
-{
-    let defs : Result<Vec<TokenDefinition<TestTokens>>, regex::Error> = get_test_definitions();
-    if defs.is_err()
+    let tt : Option<String> = None;
+    // let tttt = tt.unwrap_or_else(|| {
+    //     println!("ERROR!");
+    //     "AADFFF".to_owned()
+    // });
+    let tt = TT::get_defs();
+    if tt.is_none()
     {
-        println!("Ошибка в регексе: {}", defs.err().unwrap());
-        return None;
+        return;
     }
-    Some(defs.unwrap())
+    //let trtrt =  tt.iter().map(|m|m.unw).collect();
+    let text = "Тестовый текст 123321 тестовый текст 321 какой то текст 000";
+    let tt = tt.unwrap();
+    let actions = Lexer::tokenize(text, tt);
+    let trtr = "";
 }
 
 #[test]
 fn next_skip_one_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
-    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+    let defs =  TestTokens::get_defs();
+    if defs.is_none()
+    {
+        return;
+    }
+    let actions = Lexer::tokenize(text, defs.unwrap());
     //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
-        if let Some(next) = first.next(1)
+        if let Some(next) = first.next_skip(1)
         {
             let token = next.token;
             let skip_one = token.token_type;
@@ -76,7 +82,12 @@ fn next_skip_one_test()
 }
 
 
-
+#[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
+pub enum GroupTestTokens
+{
+    #[token(pattern="[А-Яа-я0-9_]+=(?P<gr>.*)")]
+    KeyValue,
+}
 #[test]
 fn groups_test() 
 {
@@ -85,28 +96,41 @@ fn groups_test()
     1=вторая группа
     2=третья группа
     все конец"#;
-    let actions = Lexer::tokenize(text, get_definitions().unwrap());
-    //let actions = GlobalActions::new(&lexer);
-    if let Some(first) = actions.get(TestTokens::OneTwoThree)
+    if let Some(defs) = GroupTestTokens::get_defs()
     {
-        if let Some(next) = first.next(1)
+        let actions = Lexer::tokenize(text, defs);
+        //let actions = GlobalActions::new(&lexer);
+        if let Some(first) = actions.get(GroupTestTokens::KeyValue)
         {
-            let token = next.token;
-            let skip_one = token.token_type;
-            assert_eq!(TestTokens::Zero, skip_one);
+            assert_eq!(first.get_first_group().unwrap(), "первая группа".to_owned());
+            let sec_token = first.next().unwrap();
+            assert_eq!(first.get_first_group().unwrap(), "вторая группа".to_owned());
+            let thr_token = sec_token.next().unwrap();
+            assert_eq!(first.get_first_group().unwrap(), "третья группа".to_owned());
         }
     }
+    
 }
 
 #[test]
 fn converter_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
-    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+    let defs =  TestTokens::get_defs();
+    if defs.is_none()
+    {
+        return;
+    }
+    let actions = Lexer::tokenize(text, defs.unwrap());
    //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
-        if let Some(next) = first.next(1)
+        if let Some(next) = first.next()
+        {
+            let token = next.token;
+            assert_eq!(String::from("абырвалг"), *token.converted_value.as_ref().unwrap())
+        }
+        if let Some(next) = first.next_skip(1)
         {
             let token = next.token;
             assert_eq!(String::from("ZERO"), *token.converted_value.as_ref().unwrap())
@@ -117,11 +141,16 @@ fn converter_test()
 fn before_skip_one_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
-    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+    let defs =  TestTokens::get_defs();
+    if defs.is_none()
+    {
+        return;
+    }
+    let actions = Lexer::tokenize(text, defs.unwrap());
     //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::Zero)
     {
-        if let Some(next) = first.next(0)
+        if let Some(next) = first.next()
         {
             let skip_one = next.token.token_type;
             assert_eq!(TestTokens::OneTwoThree, skip_one);
@@ -132,7 +161,12 @@ fn before_skip_one_test()
 fn find_forward_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
-    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+    let defs =  TestTokens::get_defs();
+    if defs.is_none()
+    {
+        return;
+    }
+    let actions = Lexer::tokenize(text, defs.unwrap());
     //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::OneTwoThree)
     {
@@ -147,7 +181,12 @@ fn find_forward_test()
 fn find_backward_test() 
 {
     let text = "Тестовый текст 123 тестовый текст 321 какой то текст 000";
-    let actions = Lexer::tokenize(text, get_definitions().unwrap());
+    let defs =  TestTokens::get_defs();
+    if defs.is_none()
+    {
+        return;
+    }
+    let actions = Lexer::tokenize(text, defs.unwrap());
     //let actions = GlobalActions::new(&lexer);
     if let Some(first) = actions.get(TestTokens::Zero)
     {

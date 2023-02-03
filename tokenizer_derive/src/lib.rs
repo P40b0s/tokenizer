@@ -1,45 +1,80 @@
-//! The macro which converts a struct or tuple into one which is able to be scraped easily.
-//!
-//! An example of this would be here:
+//! The macro compile TokensDefinitions for Lexer.
+//!	Макрос для компиляции определений токенов TokensDefinitions для Lexer на основе атрибутов.
+//! An example of this:
 //! ```rust
-//! #[derive(Scraper)]
-//! pub struct RedditListItem {
-//!     #[scrape(xpath = r#"//a[@data-click-id="body"]/@href"#)]
-//!     pub urls: Vec<String>
+//! #[derive(Tokenizer)]
+//! pub enum TestTokens {
+//! 	//pattern to recognize
+//!     #[token(pattern = r#"/d+"#)]
+//!     Token1,
+//! 	#[token(pattern = r#"Aa+"#)]
+//! 	//priority, in multiple matches will choise match with highter priority, 0 by default
+//! 	#[token(precedence = "1")]
+//! 	Token2,
+//! 	#[token(pattern = r#"Bb+"#)]
+//! 	#[token(precedence = "2")]
+//! 	//Convert part before > to part after >
+//! 	//Constriction *>Aa convert all matches to right part
+//! 	#[token(converter = "Bb>Aa")]
+//! 	Token3,
 //! }
 //! ```
 
 #[macro_use] extern crate syn;
 #[macro_use] extern crate quote;
-
+extern crate proc_macro2;
 use proc_macro::TokenStream;
-use quote::{__private::Span, ToTokens};
-use symbol::Symbol;
-use syn::{Attribute, Data, DeriveInput, ExprAssign, Fields, Meta, NestedMeta, spanned::Spanned, Path, Result, punctuated::Punctuated, Variant, token::{Comma, Enum}, Ident, parse::{ParseStream, Parse, Parser}};
 
+use proc_macro2::TokenTree;
+use quote::{__private::Span, ToTokens, TokenStreamExt};
+use symbol::Symbol;
+use syn::{
+	Attribute,
+	Data,
+	DeriveInput,
+	ExprAssign,
+	Fields,
+	Meta,
+	NestedMeta,
+	spanned::Spanned,
+	Path,
+	Result,
+	punctuated::Punctuated,
+	Variant,
+	token::{Comma, Enum},
+	Ident,
+	parse::{ParseStream, Parse, Parser}
+};
 mod symbol;
 
 
-// https://doc.rust-lang.org/reference/procedural-macros.html
-
-/// The macro which converts a struct or tuple into one which is able to be scraped easily.
+/// The macro compile TokensDefinitions for Lexer.
 ///
-/// An example of this would be here:
+/// An example of this:
 /// ```rust
-/// #[derive(Scraper)]
-/// pub struct RedditListItem {
-///     #[scrape(xpath = r#"//a[@data-click-id="body"]/@href"#)]
-///     pub urls: Vec<String>
+/// #[derive(Tokenizer)]
+/// pub enum TestTokens {
+/// 	//pattern to recognize
+///     #[token(pattern = r#"/d+"#)]
+///     Token1,
+/// 	#[token(pattern = r#"Aa+"#)]
+/// 	//priority, in multiple matches will choise match with highter priority, 0 by default
+/// 	#[token(precedence = "1")]
+/// 	Token2,
+/// 	#[token(pattern = r#"Bb+"#)]
+/// 	#[token(precedence = "2")]
+/// 	//Convert Bb to Aa
+/// 	//Constriction *>Aa convert all matches to Aa
+/// 	#[token(converter = "Bb>Aa")]
+/// 	Token3,
 /// }
 /// ```
 #[proc_macro_derive(Tokenizer, attributes(token))]
 pub fn derive_tokenizer(input: TokenStream) -> TokenStream 
 {
 	let mut input = parse_macro_input!(input as DeriveInput);
-	//let body = define_body(&mut input.data);
 	let name = input.ident;
-	let mut defs:  Vec<(&Ident, &Ident, Def)> = vec![];
-	//println!("Текущий тип токена: {name}");
+	let mut arr: Vec<proc_macro2::TokenStream> = vec![];
 	match &mut input.data
 	{
 		Data::Struct(_) =>unimplemented!("Struct"),
@@ -50,40 +85,67 @@ pub fn derive_tokenizer(input: TokenStream) -> TokenStream
 			{
 				if var.attrs.len() > 0
 				{
-					let tt = Def::new(var.span(), &var.attrs);
-					//println!("{}::{}", &name.to_string(), var.ident.to_string());
-					//println!("{}", tt.pattern.as_ref().map_or("нет значения",|v|v));
-					//println!("{}", tt.precedence.as_ref().map_or("нет значения",|v|v));
-					//println!("{}", tt.converter.as_ref().map_or("нет значения",|v|v));
-					defs.push((&name, &var.ident, tt));
+					let def = Def::new(var.span(), &var.attrs);
+					let enu = var.ident.clone();
+					let pattern = def.pattern.as_ref().unwrap();
+					let conv: Option<(String, String)> = def.split_conv();
+					let pr : u8 = def.get_precendence();
+
+					if let Some(conv) = def.split_conv()
+					{
+						let c1 = conv.0;
+						let c2 = conv.1;
+						let rr = quote!(TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, Some([#c1, #c2])),);
+						arr.push(rr);
+					}
+					else
+					{
+						let rr = quote!(TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, None),);
+						arr.push(rr);
+					}
+					// for a in &arr
+					// {
+					// 	eprintln!("{}", a.to_string());
+					// }
 				}
 			};
 		}
 	}
 	return quote!(
-		impl<T> Definitions<T> for TokenDefinition<T> where T: std::clone::Clone
+		impl #name
         {
-			fn get_defs() -> Vec<TokenDefinition<T>>
+			fn get_defs() -> Option<Vec<TokenDefinition<#name>>>
             {
-				let mut v : Vec<TokenDefinition<T>> = vec![];
-				for d in defs
+				let arr = [#(#arr)*].to_vec();
+				let mut new = vec![];
+				let mut error_bool : bool = false;
+				for e in arr
 				{
-					let enu = [d.0.to_string(), "::".to_owned(), d.1.to_string()].concat();
-					let pattern = d.2.pattern.as_ref().unwrap();
-					let conv: Option<(String, String)> = d.2.split_conv();
-					let pr : u8 = d.2.get_precendence();
-					let t = TokenDefinition::<T>::new(enu, pattern, conv.map_or(None, |p|p &[&p.0, &p.1]));
-					v.push(t);
+					if e.is_err()
+					{
+						error_bool = true;
+						eprintln!("Ошибка в регексе! {}", &e.err().unwrap());
+					}
+					else
+					{
+						new.push(e.unwrap());
+					}
 				}
-				//let t = TokenDefinition::<T>new(t: )
-				//new(return_token : T, regex_pattern : &str, precedence : u8, converter : Option<[&str; 2]>) -> Result<TokenDefinition<T>, Error>
-				v
+				if !error_bool
+				{
+					Some(new)
+				}
+				else
+				{
+					None
+				}
 			}
 		}
 	).into();
 	
 	
 }
+
 
 struct Def
 {

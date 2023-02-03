@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
-use crate::{token::Token, token_actions::TokenActions};
+use crate::{Token, TokenActions};
+
 
 
 #[derive(Clone)]
@@ -23,24 +24,10 @@ impl<T> PartialEq for TokenModel<T> where T: PartialEq + Clone
 
 impl<T> Eq for TokenModel<T> where T: Eq + Clone{}
 
-impl<T> TokenModel<T> where T : PartialEq + Clone
-{
-    // pub fn new(lexer: &Lexer<T>) -> Vec<TokenModel<T>>
-    // {
-    //     let mut tokens :Vec<TokenModel<T>> = Vec::new();
-    //     for lx in *lexer.tokens
-    //     {
-    //         let token = TokenModel {token : Rc::new(lx), tokens : Rc::clone(&lexer.tokens), myself: None};
-    //         tokens.push(token);
-    //     }
-    //     tokens
-    // }
-
-    // pub fn add_ref(&mut self, myself: Weak<Vec<TokenModel<T>>>)
-    // {
-    //     self.myself = Some(myself);
-    // }
-}
+// impl<T> TokenModel<T> where T : PartialEq + Clone
+// {
+    
+// }
 
 impl<T> TokenActions<T> for TokenModel<T> where T : PartialEq + Clone
 {
@@ -48,7 +35,7 @@ impl<T> TokenActions<T> for TokenModel<T> where T : PartialEq + Clone
     {
         &self.token.value
     }
-    fn get_default_group(&self) -> Option<&str> 
+    fn get_first_group(&self) -> Option<&str> 
     {
        let def = self.get_group(0)?;
        Some(def)

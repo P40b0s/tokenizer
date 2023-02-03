@@ -5,7 +5,6 @@ use crate::token_definition::TokenDefinition;
 #[derive(Debug, Clone)]
 pub struct GroupMatch
 {
-    pub name : String,
     value : String,
     start_index : usize,
     end_index : usize,
@@ -14,11 +13,10 @@ pub struct GroupMatch
 
 impl GroupMatch
 {
-    pub fn new(name : &str, value : &str, start_index : usize, end_index : usize, lenght : usize) -> GroupMatch
+    pub fn new(value : &str, start_index : usize, end_index : usize, lenght : usize) -> GroupMatch
     {
         GroupMatch 
         {
-            name : name.to_owned(),
             value : value.to_owned(),
             start_index,
             end_index,
@@ -83,63 +81,111 @@ impl<T> TokenMatch<T> where T : Copy
         let mut tokens : Vec<TokenMatch<T>> = Vec::new();
         definitions.into_iter().for_each(|def| 
         {
-            let matches = def.get_regex().find_iter(input);
+            //let matches = def.get_regex().find_iter(input);
             let all_captures = def.get_regex().captures_iter(input);
-            let captures = def.get_regex().captures(input);
-            let groups = TokenMatch::get_groups(&def, captures);
+            //let captures = def.get_regex().captures(input);
+            //let groups = TokenMatch::get_groups(&def, captures);
             //Из 3 попаданий в группах почему то захватывается только одна группа
             //и получается что в нижнем переборе 3 разных значения но группа только первая доля всех!
             for caps in all_captures
             {
-                let zero = caps.get(0).unwrap();
-                println!("{}", zero.as_str());
-            }
-            for m in matches
-            {
-                //Получаем список захваченныхгрупп у данного текста
-                //0 группа всегда вхождение целиком
-                //пока думаю...
+                let all_match = caps.get(0).expect("Ошибка извлечения 0 группы из вхождения(такого не может быть)");
+                let mut groups: Vec<GroupMatch>  = vec![]; 
+                for i in 1..10
+                {   
+                    if let Some(gr) = caps.get(i)
+                    {
+                        let start = gr.start();
+                        let end = gr.end();
+                        let lenght = end - start;
+                        let gm = GroupMatch::new
+                        (
+                            gr.as_str(),
+                            start,
+                            end,
+                            lenght
+                        );
+                        groups.push(gm);
+                    }
+                    else
+                    {
+                        //Если нет хотя бы первой группы то дальше их быть не может, итд.
+                        break;
+                    }
+                }   
                 let mut converted : Option<String> = None;
                 if let Some(conv) = &def.converter 
                 {
-                    if conv.contains_key(m.as_str())
+                    if conv.contains_key("*")
                     {
-                        converted = Some(conv.get(m.as_str()).unwrap().clone());
+                        converted = Some(conv.get("*").unwrap().clone());
+                    }
+                    else
+                    if conv.contains_key(all_match.as_str())
+                    {
+                        converted = Some(conv.get(all_match.as_str()).unwrap().to_owned());
                     } 
+                    // else
+                    // {
+                    //     for i in 0..10
+                    //     {   
+                    //         let key = ["gr", i.to_string().as_str()].concat();
+                    //         if conv.contains_key(&key)
+                    //         {
+                    //             converted = Some(conv.get(&key).unwrap().to_owned());
+                    //         }
+                    //     }
+                    // }
                 }
-                let token = TokenMatch::new(def.return_token, m.as_str(), groups.to_vec(), converted, m.start(), m.end(), def.precedence);
+                let token = TokenMatch::new(def.return_token, all_match.as_str(), groups, converted, all_match.start(), all_match.end(), def.precedence);
                 tokens.push(token);
             }
+            // for m in matches
+            // {
+            //     //Получаем список захваченныхгрупп у данного текста
+            //     //0 группа всегда вхождение целиком
+            //     //пока думаю...
+            //     let mut converted : Option<String> = None;
+            //     if let Some(conv) = &def.converter 
+            //     {
+            //         if conv.contains_key(m.as_str())
+            //         {
+            //             converted = Some(conv.get(m.as_str()).unwrap().clone());
+            //         } 
+            //     }
+            //     let token = TokenMatch::new(def.return_token, m.as_str(), groups.to_vec(), converted, m.start(), m.end(), def.precedence);
+            //     tokens.push(token);
+            // }
         });
         tokens
     }
-    ///Если есть именованные группы, добавляем их в группы
-    fn get_groups(def : &TokenDefinition<T>, cpt : Option<Captures>) -> Vec<GroupMatch>
-    {
-        let mut v :Vec<GroupMatch> = Vec::new();
-        if cpt.is_some()
-        {
-            let captures = cpt.unwrap();
-            def.get_regex().capture_names().for_each(|n|
-            {
-                if n.is_some()
-                {
-                    let name = n.unwrap();
-                    let capture_name = captures.name(name);
-                    if capture_name.is_some()
-                    {
-                        let capture_name = capture_name.unwrap();
-                        let lenght = capture_name.end() - capture_name.start();
-                        let gm = GroupMatch::new(name,
-                            capture_name.as_str(),
-                            capture_name.start(),
-                            capture_name.end(),
-                            lenght);
-                        v.push(gm);
-                    }   
-                }
-            });
-        }
-        v
-    }
 }
+    //Если есть именованные группы, добавляем их в группы
+    // fn get_groups(def : &TokenDefinition<T>, cpt : Option<Captures>) -> Vec<GroupMatch>
+    // {
+    //     let mut v :Vec<GroupMatch> = Vec::new();
+    //     if cpt.is_some()
+    //     {
+    //         let captures = cpt.unwrap();
+    //         def.get_regex().capture_names().for_each(|n|
+    //         {
+    //             if n.is_some()
+    //             {
+    //                 let name = n.unwrap();
+    //                 let capture_name = captures.name(name);
+    //                 if capture_name.is_some()
+    //                 {
+    //                     let capture_name = capture_name.unwrap();
+    //                     let lenght = capture_name.end() - capture_name.start();
+    //                     let gm = GroupMatch::new(name,
+    //                         capture_name.as_str(),
+    //                         capture_name.start(),
+    //                         capture_name.end(),
+    //                         lenght);
+    //                     v.push(gm);
+    //                 }   
+    //             }
+    //         });
+    //     }
+    //     v
+    // }

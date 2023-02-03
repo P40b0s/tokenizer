@@ -35,6 +35,7 @@ dependencies = [
 name = "tokenizer_derive"
 version = "0.10.0"
 dependencies = [
+ "proc-macro2",
  "quote",
  "syn",
 ]

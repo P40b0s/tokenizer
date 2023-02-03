@@ -1,12 +1,11 @@
 use std::rc::Rc;
-
-use crate::{token_model::TokenModel, token::Token, TokenActions};
-
+use crate::{TokenModel, Token, TokenActions};
 
 
 pub trait ForwardTokenActions<T> where T :  PartialEq + Clone
 {
-    fn next(&self, skip : usize) -> Option<TokenModel<T>>;
+    fn next(&self) -> Option<TokenModel<T>>;
+    fn next_skip(&self, skip : usize) -> Option<TokenModel<T>>;
     fn next_is(&self, next : T, skip : usize) -> bool;
     ///Ищем токены переданные в фунции predicate вниз по массиву с максимальной глубиной max_deep и включая себя with_self
     fn find_forward(&self, searched_tokens :&[T], max_deep : usize, with_self : bool) -> Option<TokenModel<T>>;
@@ -23,17 +22,22 @@ impl<T> ForwardTokenActions<T> for TokenModel<T> where T :  PartialEq + Clone
 {
     
     ///Получает следующий по массиву токен, если skip = 0
-    fn next(&self, skip : usize) -> Option<TokenModel<T>>
+    fn next(&self) -> Option<TokenModel<T>>
     {
-        let founded = self.get_tokens()
-                                .find(|f|f.position == (self.get_position() +1 + skip))?;
-        let model = self.to_token_model(founded);
-        Some(model)
+        self.next_skip(0)
     }
+     ///Получает следующий по массиву токен, если skip = 0
+     fn next_skip(&self, skip : usize) -> Option<TokenModel<T>>
+     {
+         let founded = self.get_tokens()
+                                 .find(|f|f.position == (self.get_position() +1 + skip))?;
+         let model = self.to_token_model(founded);
+         Some(model)
+     }
 
     fn next_is(&self, next : T, skip : usize) -> bool
     {
-        if let Some(n) = self.next(skip)
+        if let Some(n) = self.next_skip(skip)
         {
             if n.token.eq_type(&next)
             {
