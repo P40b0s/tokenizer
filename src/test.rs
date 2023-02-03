@@ -9,6 +9,7 @@ use crate::token_definition::{TokenDefinition};
 use crate::lexer::{Tokenizer, Lexer};
 
 
+
 pub trait CreateDefinitions where Self: Clone
 {
     fn create_defs(&self) -> Result<Vec<TokenDefinition<Self>>, regex::Error>;
