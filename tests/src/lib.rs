@@ -96,12 +96,11 @@ fn groups_test()
         {
             assert_eq!(first.get_first_group().unwrap(), "первая группа".to_owned());
             let sec_token = first.next().unwrap();
-            assert_eq!(first.get_first_group().unwrap(), "вторая группа".to_owned());
+            assert_eq!(sec_token.get_first_group().unwrap(), "вторая группа".to_owned());
             let thr_token = sec_token.next().unwrap();
-            assert_eq!(first.get_first_group().unwrap(), "третья группа".to_owned());
+            assert_eq!(thr_token.get_first_group().unwrap(), "третья группа".to_owned());
         }
     }
-    
 }
 
 #[test]

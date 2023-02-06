@@ -18,6 +18,8 @@
 //! 	#[token(converter = "Bb>Aa")]
 //! 	Token3,
 //! }
+//! //Все определения токенов которые были определены аттрибутами для данного enum
+//! let tokens_definitions = TestTokens::get_defs();
 //! ```
 
 #[macro_use] extern crate syn;
@@ -25,25 +27,25 @@
 extern crate proc_macro2;
 use proc_macro::TokenStream;
 
-use proc_macro2::TokenTree;
-use quote::{__private::Span, ToTokens, TokenStreamExt};
+//use proc_macro2::TokenTree;
+use quote::{ToTokens};
 use symbol::Symbol;
 use syn::{
 	Attribute,
 	Data,
 	DeriveInput,
 	ExprAssign,
-	Fields,
+	//Fields,
 	Meta,
 	NestedMeta,
-	spanned::Spanned,
+//	spanned::Spanned,
 	Path,
-	Result,
-	punctuated::Punctuated,
-	Variant,
-	token::{Comma, Enum},
-	Ident,
-	parse::{ParseStream, Parse, Parser}
+	//Result,
+	//punctuated::Punctuated,
+	//Variant,
+//	token::{Comma, Enum},
+	//Ident,
+//	parse::{ParseStream, Parse, Parser}
 };
 mod symbol;
 
@@ -68,11 +70,14 @@ mod symbol;
 /// 	#[token(converter = "Bb>Aa")]
 /// 	Token3,
 /// }
+/// 
+/// //Все определения токенов которые были определены аттрибутами для данного enum
+/// let tokens_definitions = TestTokens::get_defs();
 /// ```
 #[proc_macro_derive(Tokenizer, attributes(token))]
-pub fn derive_tokenizer(input: TokenStream) -> TokenStream 
+pub fn derive_tokenizer(inp: TokenStream) -> TokenStream 
 {
-	let mut input = parse_macro_input!(input as DeriveInput);
+	let mut input = parse_macro_input!(inp as DeriveInput);
 	let name = input.ident;
 	let mut arr: Vec<proc_macro2::TokenStream> = vec![];
 	match &mut input.data
@@ -85,12 +90,19 @@ pub fn derive_tokenizer(input: TokenStream) -> TokenStream
 			{
 				if var.attrs.len() > 0
 				{
-					let def = Def::new(var.span(), &var.attrs);
+					let def = Def::new(&var.attrs);
 					let enu = var.ident.clone();
-					let pattern = def.pattern.as_ref().unwrap();
-					let conv: Option<(String, String)> = def.split_conv();
+					let mut pattern: String = String::new();
+					if let Some(p) = def.pattern.as_ref()
+					{
+						pattern = p.clone();
+					}
+					else
+					{
+						eprintln!("Вы не указали pattern для {}", &var.ident.to_string());
+						return var.ident.to_token_stream().into();
+					}
 					let pr : u8 = def.get_precendence();
-
 					if let Some(conv) = def.split_conv()
 					{
 						let c1 = conv.0;
@@ -103,10 +115,6 @@ pub fn derive_tokenizer(input: TokenStream) -> TokenStream
 						let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, None),);
 						arr.push(rr);
 					}
-					// for a in &arr
-					// {
-					// 	eprintln!("{}", a.to_string());
-					// }
 				}
 			};
 		}
@@ -114,6 +122,7 @@ pub fn derive_tokenizer(input: TokenStream) -> TokenStream
 	return quote!(
 		impl #name
         {
+			///Получает все определения токенов, которые были определены в аттрибутах enum
 			fn get_defs() -> Option<Vec<::tokenizer::TokenDefinition<#name>>>
             {
 				let arr = [#(#arr)*].to_vec();
@@ -149,7 +158,7 @@ pub fn derive_tokenizer(input: TokenStream) -> TokenStream
 
 struct Def
 {
-	span: Span,
+	//span: Span,
 	converter: Option<String>,
 	pattern: Option<String>,
 	precedence: Option<String>
@@ -157,14 +166,14 @@ struct Def
 
 impl Def
 {
-	pub fn new(span: Span, attributes: &[Attribute]) -> Self 
+	pub fn new(attributes: &[Attribute]) -> Self 
     {
 		let pattern = get_attr_value(symbol::PATTERN, attributes);
 		let precedence = get_attr_value(symbol::PRECEDENCE, attributes);
 		let converter = get_attr_value(symbol::CONVERTER, attributes);
 		Self 
         {
-			span,
+			//span,
 			converter,
 			pattern,
 			precedence
