@@ -1,20 +1,12 @@
 use std::collections::HashMap;
 use std::rc::{Rc, Weak};
 
+extern crate tokenizer;
+extern crate tokenizer_derive;
+
 use tokenizer_derive::Tokenizer;
-
-use crate::{Token, TokenActions};
-use crate::actions::{ForwardTokenActions, BackwardTokenActions, GlobalActions};
-use crate::token_definition::{TokenDefinition};
-use crate::lexer::{Tokenizer, Lexer};
-
-
-
-pub trait CreateDefinitions where Self: Clone
-{
-    fn create_defs(&self) -> Result<Vec<TokenDefinition<Self>>, regex::Error>;
-}
-
+use tokenizer::{Token, TokenActions};
+use tokenizer::{ForwardTokenActions, BackwardTokenActions, GlobalActions, TokenDefinition, Tokenizer, Lexer};
 
 #[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
 pub enum TestTokens
@@ -36,7 +28,6 @@ pub enum TT
     #[token(precedence="3")]
     #[token(converter="123321>321")]
     One,
-
     Two
 }
 

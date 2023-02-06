@@ -95,12 +95,12 @@ pub fn derive_tokenizer(input: TokenStream) -> TokenStream
 					{
 						let c1 = conv.0;
 						let c2 = conv.1;
-						let rr = quote!(TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, Some([#c1, #c2])),);
+						let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, Some([#c1, #c2])),);
 						arr.push(rr);
 					}
 					else
 					{
-						let rr = quote!(TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, None),);
+						let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, None),);
 						arr.push(rr);
 					}
 					// for a in &arr
@@ -114,7 +114,7 @@ pub fn derive_tokenizer(input: TokenStream) -> TokenStream
 	return quote!(
 		impl #name
         {
-			fn get_defs() -> Option<Vec<TokenDefinition<#name>>>
+			fn get_defs() -> Option<Vec<::tokenizer::TokenDefinition<#name>>>
             {
 				let arr = [#(#arr)*].to_vec();
 				let mut new = vec![];

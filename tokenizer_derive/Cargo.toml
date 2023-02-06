@@ -1,9 +1,9 @@
 
 [package]
 name = "tokenizer_derive"
-version = "0.10.0"
+version = "0.10.12"
 authors = ["Aleks xar <p40b0s@google.com>"]
-description = "Create ridiculously fast Lexers"
+description = "Macros for create Tokenizer's tokens definitions"
 repository = "https://github.com/p40b0s/tokenizer"
 keywords = ["lexer", "tokenizer", "parser"]
 categories = ["parsing", "text-processing"]

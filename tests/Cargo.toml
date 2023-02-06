@@ -1,14 +1,10 @@
 [package]
-name = "tokenizerx"
+name = "macro-test"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-
-members = [
-    "tokenizer",
-    "tokenizer_derive",
-    "tests"
-]
+[dependencies]
+tokenizer = {path = "../tokenizer"}
+tokenizer_derive = {path = "../tokenizer_derive"}

@@ -1,0 +1,21 @@
+[package]
+name = "tokenizer"
+version = "0.1.5"
+edition = "2021"
+authors = ["Aleks xar <p40b0s@google.com>"]
+description = "Tokenizer for create simple parser"
+repository = "https://github.com/p40b0s/tokenizer"
+keywords = ["lexer", "tokenizer", "parser"]
+categories = ["parsing", "text-processing"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "tokenizer"
+path = "src/lib.rs"
+
+[dependencies]
+regex = "1.7.1"
+itertools = "0.10.5"
+#lazy_static="1.4.0"
+tokenizer_derive = {path = "../tokenizer_derive"}
+
