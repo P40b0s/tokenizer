@@ -6,12 +6,13 @@ use regex::{Regex, Error, Matches, Captures};
 ///Определение токена, определенный регекс с весом по которому будет вестись поиск в тексте
 pub struct TokenDefinition<T> where T : Clone 
 {
-    pub regex : once_cell::sync::OnceCell<Regex>,
+    pub regex : Regex,
     pub return_token : T,
     pub precedence : u8,
     pub converter : Option<HashMap<String,String>>
     
 }
+
 impl<T> TokenDefinition<T> where T : Clone
 {
     /// # Arguments
@@ -23,7 +24,7 @@ impl<T> TokenDefinition<T> where T : Clone
     ///
     pub fn new(return_token : T, regex_pattern : &str, precedence : u8, converter : Option<[&str; 2]>) -> Result<TokenDefinition<T>, Error>
     {
-        let regex = once_cell::sync::OnceCell::with_value(Regex::new(regex_pattern)?);
+        let regex = Regex::new(regex_pattern)?;
         Ok(TokenDefinition 
         {
             return_token,
@@ -41,9 +42,10 @@ impl<T> TokenDefinition<T> where T : Clone
             }
         })
     }
+    
     pub fn get_regex(&self)-> &Regex
     {
-        self.regex.get().unwrap()
+        &self.regex
     }
 }
 
