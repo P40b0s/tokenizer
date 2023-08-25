@@ -37,7 +37,7 @@ use syn::{
 	ExprAssign,
 	//Fields,
 	Meta,
-	NestedMeta,
+	//NestedMeta,
 //	spanned::Spanned,
 	Path,
 	//Result,
@@ -219,7 +219,7 @@ fn get_attr_value(attr_name: Symbol, attributes: &[Attribute]) -> Option<String>
 {
 	for attr in attributes 
     {
-		if attr.path == symbol::BASE 
+		if attr.path() == symbol::BASE 
         {
 			let parsed = parse_attr(attr)?;
 			if parsed.0 == attr_name 
@@ -263,18 +263,18 @@ fn parse_attr(attr: &Attribute) -> Option<(Path, String)>
 	Some((left.path, right_value))
 }
 
-fn parse_attr_name(attr: &Attribute) -> Option<Path> 
-{
-	// TODO: Actually use parse_meta() for all attributes instead of just this one.
+// fn parse_attr_name(attr: &Attribute) -> Option<Path> 
+// {
+// 	// TODO: Actually use parse_meta() for all attributes instead of just this one.
 
-	let parse = attr.parse_meta().expect("--------------------------------------------");
-	if let Meta::List(val) = parse 
-    {
-		let ret = val.nested.into_iter().next();
-		if let NestedMeta::Meta(Meta::Path(path)) = ret? 
-        {
-			return Some(path);
-		}
-	}
-	None
-}
+// 	let parse = attr.parse.expect("--------------------------------------------");
+// 	if let Meta::List(val) = parse 
+//     {
+// 		let ret = val.nested.into_iter().next();
+// 		if let NestedMeta::Meta(Meta::Path(path)) = ret? 
+//         {
+// 			return Some(path);
+// 		}
+// 	}
+// 	None
+// }
