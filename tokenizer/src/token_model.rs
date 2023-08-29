@@ -37,14 +37,14 @@ impl<T> TokenActions<T> for TokenModel<T> where T : PartialEq + Clone
     }
     fn get_first_group(&self) -> Option<&str> 
     {
-       let def = self.get_group(0)?;
+       let def = self.get_group(1)?;
        Some(def)
     }
     fn get_group(&self, group_number: usize) -> Option<&str> 
     {
-        let gr = self.token.groups.iter().nth(group_number)?;
-        let val = gr.get_value();
-        Some(val)
+        let gr = self.token.groups.iter().find(|f| f.get_group_index() == group_number);
+        let val: Option<&str> = gr.map_or(None, |m| Some(m.get_value()));
+        val
     }
     fn get_group_by_name(&self, group_name: &str) -> Option<&GroupMatch>
     {

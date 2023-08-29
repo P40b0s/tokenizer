@@ -7,6 +7,8 @@ use crate::token_definition::TokenDefinition;
 #[derive(Debug, Clone)]
 pub struct GroupMatch
 {
+    ///индекс группы в найденом выражении
+    index: usize,
     value : String,
     start_index : usize,
     end_index : usize,
@@ -16,10 +18,11 @@ pub struct GroupMatch
 
 impl GroupMatch
 {
-    pub fn new(value : &str, start_index : usize, end_index : usize, lenght : usize, name: Option<String>) -> GroupMatch
+    pub fn new(index: usize, value : &str, start_index : usize, end_index : usize, lenght : usize, name: Option<String>) -> GroupMatch
     {
         GroupMatch 
         {
+            index,
             value : value.to_owned(),
             start_index,
             end_index,
@@ -46,6 +49,10 @@ impl GroupMatch
     pub fn get_name(&self)-> Option<&String>
     {
         self.name.as_ref()
+    }
+    pub fn get_group_index(&self)-> usize
+    {
+        self.index
     }
     
 }
@@ -90,105 +97,91 @@ impl<T> TokenMatch<T> where T : Copy
         let mut tokens : Vec<TokenMatch<T>> = Vec::new();
         definitions.into_iter().for_each(|def| 
         {
-            // let mut names : HashMap<String, String> = HashMap::new();
-            // if let Some(cps) = def.get_regex().captures(input)
-            // {
-            //     names = def.get_regex()
-            //     .capture_names()
-            //     .flatten()
-            //     .filter_map(|n| Some((n.to_owned(), cps.name(n)?.as_str().to_owned())))
-            //     .collect();
-            // }
-            
-            //let matches = def.get_regex().find_iter(input);
-            let all_captures = def.get_regex().captures_iter(input);
-            
-            //let captures = def.get_regex().captures(input);
-            //let groups = TokenMatch::get_groups(&def, captures);
-            //Из 3 попаданий в группах почему то захватывается только одна группа
-            //и получается что в нижнем переборе 3 разных значения но группа только первая для всех!
-            for caps in all_captures
+            for caps in def.get_regex().captures_iter(input)
             {
-                let all_match = caps.get(0).expect("Ошибка извлечения 0 группы из вхождения(такого не может быть)");
                 let mut groups: Vec<GroupMatch>  = vec![];
-                for i in 1..10
-                {   
-                    if let Some(gr) = caps.get(i)
+                if let Some(all_match) = caps.get(0)
+                { 
+                    for (i, c) in caps.iter().enumerate()
                     {
-                        let mut name: Option<String> = None;
-                        for n in def.get_regex().capture_names()
+                        if let Some(gr) = c
                         {
-                            if let Some(n) = n
+                            let mut name: Option<String> = None;
+                            for n in def.get_regex().capture_names()
                             {
-                                let nm = caps.name(n).map_or("", |m| m.as_str());
-                                if caps.name(n).is_some() && nm == gr.as_str()
+                                if let Some(n) = n
                                 {
-                                    name = Some(n.to_owned())
+                                    let nm = caps.name(n).map_or("", |m| m.as_str());
+                                    if caps.name(n).is_some() && nm == gr.as_str()
+                                    {
+                                        name = Some(n.to_owned())
+                                    }
                                 }
                             }
+                            let start = gr.start();
+                            let end = gr.end();
+                            let lenght = end - start;
+                            let gm = GroupMatch::new
+                            (
+                                i,
+                                gr.as_str(),
+                                start,
+                                end,
+                                lenght,
+                                name
+                            );
+                            groups.push(gm);
                         }
-                        let start = gr.start();
-                        let end = gr.end();
-                        let lenght = end - start;
-                        let gm = GroupMatch::new
-                        (
-                            gr.as_str(),
-                            start,
-                            end,
-                            lenght,
-                            name
-                        );
-                        groups.push(gm);
                     }
-                    else
-                    {
-                        //Если нет хотя бы первой группы то дальше их быть не может, итд.
-                        break;
-                    }
-                }   
-                let mut converted : Option<String> = None;
-                if let Some(conv) = &def.converter 
-                {
-                    if conv.contains_key("*")
-                    {
-                        converted = Some(conv.get("*").unwrap().clone());
-                    }
-                    else
-                    if conv.contains_key(all_match.as_str())
-                    {
-                        converted = Some(conv.get(all_match.as_str()).unwrap().to_owned());
-                    } 
-                    // else
-                    // {
-                    //     for i in 0..10
-                    //     {   
-                    //         let key = ["gr", i.to_string().as_str()].concat();
-                    //         if conv.contains_key(&key)
+                    // for i in 1..10
+                    // {   
+                    //     if let Some(gr) = caps.get(i)
+                    //     {
+                    //         let mut name: Option<String> = None;
+                    //         for n in def.get_regex().capture_names()
                     //         {
-                    //             converted = Some(conv.get(&key).unwrap().to_owned());
+                    //             if let Some(n) = n
+                    //             {
+                    //                 let nm = caps.name(n).map_or("", |m| m.as_str());
+                    //                 if caps.name(n).is_some() && nm == gr.as_str()
+                    //                 {
+                    //                     name = Some(n.to_owned())
+                    //                 }
+                    //             }
                     //         }
+                    //         let start = gr.start();
+                    //         let end = gr.end();
+                    //         let lenght = end - start;
+                    //         let gm = GroupMatch::new
+                    //         (
+                    //             gr.as_str(),
+                    //             start,
+                    //             end,
+                    //             lenght,
+                    //             name
+                    //         );
+                    //         groups.push(gm);
                     //     }
-                    // }
+                        //группы с ленивым квантификатором будут None, но за ними может быть еще нумерованная группа
+                        //возьмем максимум 10 групп
+                        // else
+                        // {
+                        //     //Если нет хотя бы первой группы то дальше их быть не может, итд.
+                        //     break;
+                        // }
+                    // }   
+                    let mut converted : Option<String> = None;
+                    if let Some(conv) = &def.converter 
+                    {
+
+                        let mut cv = String::new();
+                        caps.expand(conv, &mut cv);
+                        converted = Some(cv);
+                    }
+                    let token = TokenMatch::new(def.return_token, all_match.as_str(), groups.clone(),  converted, all_match.start(), all_match.end(), def.precedence);
+                    tokens.push(token);
                 }
-                let token = TokenMatch::new(def.return_token, all_match.as_str(), groups,  converted, all_match.start(), all_match.end(), def.precedence);
-                tokens.push(token);
             }
-            // for m in matches
-            // {
-            //     //Получаем список захваченныхгрупп у данного текста
-            //     //0 группа всегда вхождение целиком
-            //     //пока думаю...
-            //     let mut converted : Option<String> = None;
-            //     if let Some(conv) = &def.converter 
-            //     {
-            //         if conv.contains_key(m.as_str())
-            //         {
-            //             converted = Some(conv.get(m.as_str()).unwrap().clone());
-            //         } 
-            //     }
-            //     let token = TokenMatch::new(def.return_token, m.as_str(), groups.to_vec(), converted, m.start(), m.end(), def.precedence);
-            //     tokens.push(token);
-            // }
         });
         tokens
     }

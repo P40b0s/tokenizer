@@ -97,11 +97,11 @@ pub fn derive_tokenizer(inp: TokenStream) -> TokenStream
 					for def in defs
 					{
 						
-						let mut pattern: String = String::new();
+						let mut pattern: &String = &String::new();
 						let mut pr = 0u8;
 						if let Some(p) = def.pattern.as_ref()
 						{
-							pattern = p.to_owned();
+							pattern = p;
 						}
 						else
 						{
@@ -112,18 +112,25 @@ pub fn derive_tokenizer(inp: TokenStream) -> TokenStream
 						{
 							pr = def.precedence.unwrap();
 						}
-						if let Some(conv) = def.split_conv()
+						// if let Some(conv) = def.split_conv
+						// {
+						// 	let c1 = conv.0;
+						// 	let c2 = conv.1;
+						// 	let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, Some([#c1, #c2])),);
+						// 	arr.push(rr);
+						// }
+						if let Some(conv) = def.converter
 						{
-							let c1 = conv.0;
-							let c2 = conv.1;
-							let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, Some([#c1, #c2])),);
+							let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, Some(#conv.to_string())),);
 							arr.push(rr);
 						}
-						else
+						else 
 						{
 							let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, None),);
 							arr.push(rr);
 						}
+						
+						
 					}
 				}
 			};
@@ -206,7 +213,7 @@ impl Def
 		}
 		else 
 		{
-			eprint!("{}", defs.err().unwrap());
+			eprint!("Ошибка парсинга токенов: {}", defs.err().unwrap());
 			return vec![];
 		}
 	}
@@ -227,19 +234,19 @@ impl Def
 	//    }
 	//    0
 	// }
-	pub fn split_conv(&self) -> Option<(String, String)>
-	{
-		let conv = self.converter.as_ref()?;
-		if !conv.contains(">")
-		{
-			eprint!("Ошибка, неправильная конструкция в конвертере значений! {} - должна быть: изменяемое>измененное", conv);
-			return None;
-		}
-		let parsed: Vec<&str> = conv.split(">").collect();
-		let first = parsed.iter().nth(0)?;
-		let second = parsed.iter().nth(1)?;
-		return Some((first.to_string(), second.to_string()));
-	}
+	// pub fn split_conv(&self) -> Option<(String, String)>
+	// {
+	// 	let conv = self.converter.as_ref()?;
+	// 	if !conv.contains(">")
+	// 	{
+	// 		eprint!("Ошибка, неправильная конструкция в конвертере значений! {} - должна быть: изменяемое>измененное", conv);
+	// 		return None;
+	// 	}
+	// 	let parsed: Vec<&str> = conv.split(">").collect();
+	// 	let first = parsed.iter().nth(0)?;
+	// 	let second = parsed.iter().nth(1)?;
+	// 	return Some((first.to_string(), second.to_string()));
+	// }
 
 }
 
@@ -308,27 +315,31 @@ fn parse_tokens(attributes: &[Attribute]) -> Result<Vec<Def>, syn::Error>
 				{
 					match meta 
 					{
-						// #[token(pattern="")]
+						// #[token(pattern())]
 						Meta::List(meta) if meta.path.is_ident(&symbol::PATTERN) => 
 						{
 							let lit: LitStr = meta.parse_args()?;
 							let p: String = lit.value();
+							eprint!("значение паттерна: {}", &p);
 							def.pattern = Some(p);
 						},
 						Meta::List(meta) if meta.path.is_ident(&symbol::PRECEDENCE) => 
 						{
 							let lit: LitInt = meta.parse_args()?;
 							let p: u16 = lit.base10_parse()?;
+							eprint!("значение очередности: {}", &p);
 							def.precedence = Some(p as u8);
 						},
 						Meta::List(meta) if meta.path.is_ident(&symbol::CONVERTER) => 
 						{
 							let lit: LitStr = meta.parse_args()?;
-							let p: String = lit.value();
+							let p = lit.value();
+							eprint!("значение конвертера: {}", &p);
 							def.converter = Some(p);
 						},
 						_ => 
 						{
+
 							return Err(Error::new_spanned(meta, "нераспознана последовательность token"));
 						}
 					}

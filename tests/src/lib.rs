@@ -103,7 +103,7 @@ fn next_skip_one_test()
 #[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
 pub enum GroupTestTokens
 {
-    #[token(pattern("[А-Яа-я0-9_]+=(?P<gr>.*)"))]
+    #[token(pattern("[А-Яа-я0-9_]+=(?P<gr>.*)"), precedence(3))]
     KeyValue,
 }
 #[test]
@@ -132,7 +132,7 @@ fn groups_test()
 #[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
 pub enum GroupNameTestTokens
 {
-    #[token(pattern(r#"(?P<one>первый)\s(?P<two>второй)\s(?P<three>третий)"#))]
+    #[token(pattern(r#"(?P<one>первый)\s(?P<two>второй)\s(?P<three>третий)"#), converter(r#"конвертированное значение бдет=$three"#),)]
     KeyValue,
 }
 #[test]
@@ -148,6 +148,8 @@ fn groups_names_test()
             assert_eq!(first.get_group_by_name("one").unwrap().get_value(), "первый");
             assert_eq!(first.get_group_by_name("two").unwrap().get_value(), "второй");
             assert_eq!(first.get_group_by_name("three").unwrap().get_value(), "третий");
+            assert_eq!(first.token.converted_value.as_ref().unwrap(), "конвертированное значение бдет=третий");
+
         }
     }
 }
