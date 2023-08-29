@@ -11,24 +11,50 @@ use tokenizer::{ForwardTokenActions, BackwardTokenActions, GlobalActions, TokenD
 #[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
 pub enum TestTokens
 {
-    #[token(pattern="(?P<gr>123)")]
+    #[token(pattern("(?P<gr>123)"))]
     OneTwoThree,
-    #[token(pattern="321")]
-    #[token(converter="*>абырвалг")]
+    #[token(pattern("321"), converter("*>абырвалг"))]
     ThreeTwoOne,
-    #[token(pattern="000")]
-    #[token(converter="000>ZERO")]
+    #[token(pattern("000"), converter("000>ZERO"))]
     Zero
+}
+
+#[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
+pub enum TestTokens2
+{
+    #[token(precedence(0), converter("conv1>o"), pattern("pat1"))]
+    #[token(precedence(1), converter("conv2>1"), pattern("pat2"))]
+    OneTwoThree
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
 pub enum TT
 {
-    #[token(pattern="123[[[p][]]321")]
-    #[token(precedence="3")]
-    #[token(converter="123321>321")]
+    #[token(pattern("123[[[p][]]321"), precedence(3), converter("123321>321"))]
     One,
     Two
+}
+
+#[test]
+fn test_new_macros()
+{
+    let tt : Option<String> = None;
+    // let tttt = tt.unwrap_or_else(|| {
+    //     println!("ERROR!");
+    //     "AADFFF".to_owned()
+    // });
+    let tt = TestTokens2::get_defs();
+    println!("{:?}", tt);
+    if tt.is_none()
+    {
+        return;
+    }
+    
+    //let trtrt =  tt.iter().map(|m|m.unw).collect();
+    let text = "Тестовый текст 123321 тестовый текст 321 какой то текст 000";
+    let tt = tt.unwrap();
+    let actions = Lexer::tokenize(text, tt);
+    let trtr = "";
 }
 
 #[test]
@@ -77,7 +103,7 @@ fn next_skip_one_test()
 #[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
 pub enum GroupTestTokens
 {
-    #[token(pattern="[А-Яа-я0-9_]+=(?P<gr>.*)")]
+    #[token(pattern("[А-Яа-я0-9_]+=(?P<gr>.*)"))]
     KeyValue,
 }
 #[test]
@@ -102,6 +128,30 @@ fn groups_test()
         }
     }
 }
+
+#[derive(Copy, Clone, PartialEq, Debug, Tokenizer)]
+pub enum GroupNameTestTokens
+{
+    #[token(pattern(r#"(?P<one>первый)\s(?P<two>второй)\s(?P<three>третий)"#))]
+    KeyValue,
+}
+#[test]
+fn groups_names_test() 
+{
+    let text = r#"первый второй третий"#;
+    if let Some(defs) = GroupNameTestTokens::get_defs()
+    {
+        let actions = Lexer::tokenize(text, defs);
+        //let actions = GlobalActions::new(&lexer);
+        if let Some(first) = actions.get(GroupNameTestTokens::KeyValue)
+        {
+            assert_eq!(first.get_group_by_name("one").unwrap().get_value(), "первый");
+            assert_eq!(first.get_group_by_name("two").unwrap().get_value(), "второй");
+            assert_eq!(first.get_group_by_name("three").unwrap().get_value(), "третий");
+        }
+    }
+}
+
 
 #[test]
 fn converter_test() 

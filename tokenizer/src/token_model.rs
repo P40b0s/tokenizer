@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::{Token, TokenActions};
+use crate::{Token, TokenActions, matches::GroupMatch};
 
 
 
@@ -46,6 +46,17 @@ impl<T> TokenActions<T> for TokenModel<T> where T : PartialEq + Clone
         let val = gr.get_value();
         Some(val)
     }
+    fn get_group_by_name(&self, group_name: &str) -> Option<&GroupMatch>
+    {
+        if let Some(gr) = self.token.groups.iter().find(|f|f.get_name().is_some_and(|n| n == group_name))
+        {
+            Some(gr)
+        }
+        else 
+        {
+            None
+        }
+    }
     fn get_position(&self) -> usize
     {
         self.token.position
@@ -53,6 +64,10 @@ impl<T> TokenActions<T> for TokenModel<T> where T : PartialEq + Clone
     fn get_tokentype(&self) -> &T
     {
         &self.token.token_type
+    }
+    fn is_tokentype(&self, token_type: T) -> bool
+    {
+        &self.token.token_type == &token_type
     }
     fn get_tokens(&self) -> core::slice::Iter<Token<T>>
     {
@@ -62,4 +77,9 @@ impl<T> TokenActions<T> for TokenModel<T> where T : PartialEq + Clone
     {
         TokenModel { token: t.clone(), tokens: Rc::clone(&self.tokens) }
     }
+    fn get_coordinates(&self) -> (usize, usize)
+    {
+        (self.token.start_index, self.token.lenght)
+    }
+
 }
