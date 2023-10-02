@@ -9,9 +9,10 @@ pub struct TokenDefinition<T> where T : Clone
     pub regex : Regex,
     pub return_token : T,
     pub precedence : u8,
-    pub converter : Option<HashMap<String,String>>
+    pub converter : Option<String>
     
 }
+
 impl<T> TokenDefinition<T> where T : Clone
 {
     /// # Arguments
@@ -21,7 +22,7 @@ impl<T> TokenDefinition<T> where T : Clone
     /// * `precedence` - Вес токена, если регексы перекрывают друг друга, то определением токена станет то у которого самый низкий вес (начинается с  0)
     /// * `converter` - При необходимости, конвертирование значения в другое
     ///
-    pub fn new(return_token : T, regex_pattern : &str, precedence : u8, converter : Option<[&str; 2]>) -> Result<TokenDefinition<T>, Error>
+    pub fn new(return_token : T, regex_pattern : &str, precedence : u8, converter : Option<String>) -> Result<TokenDefinition<T>, Error>
     {
         let regex = Regex::new(regex_pattern)?;
         Ok(TokenDefinition 
@@ -29,20 +30,10 @@ impl<T> TokenDefinition<T> where T : Clone
             return_token,
             regex,
             precedence,
-            converter : match converter
-            {
-                Some(c) => 
-                {
-                    let mut converter: HashMap<String, String> = HashMap::new();
-                    converter.insert(String::from(c[0]), String::from(c[1]));
-                    Some(converter)
-                },
-                None => None
-            }
+            converter
         })
     }
     
-
     pub fn get_regex(&self)-> &Regex
     {
         &self.regex

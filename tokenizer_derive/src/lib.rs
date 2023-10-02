@@ -37,9 +37,9 @@ use syn::{
 	ExprAssign,
 	//Fields,
 	Meta,
-	NestedMeta,
+	//NestedMeta,
 //	spanned::Spanned,
-	Path,
+	Path, punctuated::Punctuated, LitInt, Error, LitStr,
 	//Result,
 	//punctuated::Punctuated,
 	//Variant,
@@ -90,30 +90,47 @@ pub fn derive_tokenizer(inp: TokenStream) -> TokenStream
 			{
 				if var.attrs.len() > 0
 				{
-					let def = Def::new(&var.attrs);
+					//let def = Def::new(&var.attrs);
+					let defs = Def::new(&var.attrs);
 					let enu = var.ident.clone();
-					let mut pattern: String = String::new();
-					if let Some(p) = def.pattern.as_ref()
+					//println!("{:?}", &defs);
+					for def in defs
 					{
-						pattern = p.clone();
-					}
-					else
-					{
-						eprintln!("Вы не указали pattern для {}", &var.ident.to_string());
-						return var.ident.to_token_stream().into();
-					}
-					let pr : u8 = def.get_precendence();
-					if let Some(conv) = def.split_conv()
-					{
-						let c1 = conv.0;
-						let c2 = conv.1;
-						let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, Some([#c1, #c2])),);
-						arr.push(rr);
-					}
-					else
-					{
-						let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, None),);
-						arr.push(rr);
+						
+						let mut pattern: &String = &String::new();
+						let mut pr = 0u8;
+						if let Some(p) = def.pattern.as_ref()
+						{
+							pattern = p;
+						}
+						else
+						{
+							eprintln!("Вы не указали pattern для {}", &var.ident.to_string());
+							return var.ident.to_token_stream().into();
+						}
+						if def.precedence.is_some()
+						{
+							pr = def.precedence.unwrap();
+						}
+						// if let Some(conv) = def.split_conv
+						// {
+						// 	let c1 = conv.0;
+						// 	let c2 = conv.1;
+						// 	let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, Some([#c1, #c2])),);
+						// 	arr.push(rr);
+						// }
+						if let Some(conv) = def.converter
+						{
+							let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, Some(#conv.to_string())),);
+							arr.push(rr);
+						}
+						else 
+						{
+							let rr = quote!(::tokenizer::TokenDefinition::<#name>::new(#name::#enu, #pattern, #pr, None),);
+							arr.push(rr);
+						}
+						
+						
 					}
 				}
 			};
@@ -123,7 +140,7 @@ pub fn derive_tokenizer(inp: TokenStream) -> TokenStream
 		impl #name
         {
 			///Получает все определения токенов, которые были определены в аттрибутах enum
-			fn get_defs() -> Option<Vec<::tokenizer::TokenDefinition<#name>>>
+			pub fn get_defs() -> Option<Vec<::tokenizer::TokenDefinition<#name>>>
             {
 				let arr = [#(#arr)*].to_vec();
 				let mut new = vec![];
@@ -156,125 +173,200 @@ pub fn derive_tokenizer(inp: TokenStream) -> TokenStream
 }
 
 
+#[derive(Debug)]
 struct Def
 {
 	//span: Span,
 	converter: Option<String>,
 	pattern: Option<String>,
-	precedence: Option<String>
+	precedence: Option<u8>
+}
+impl Default for Def
+{
+	fn default() -> Self 
+	{
+		Def { converter: None, pattern: None, precedence: None }
+	}
 }
 
 impl Def
 {
-	pub fn new(attributes: &[Attribute]) -> Self 
+	// pub fn new(attributes: &[Attribute]) -> Self 
+    // {
+	// 	let pattern = get_attr_value(symbol::PATTERN, attributes);
+	// 	let precedence = get_attr_value(symbol::PRECEDENCE, attributes);
+	// 	let converter = get_attr_value(symbol::CONVERTER, attributes);
+	// 	Self 
+    //     {
+	// 		//span,
+	// 		converter,
+	// 		pattern,
+	// 		precedence
+	// 	}
+	// }
+	pub fn new(attributes: &[Attribute]) -> Vec<Def>
     {
-		let pattern = get_attr_value(symbol::PATTERN, attributes);
-		let precedence = get_attr_value(symbol::PRECEDENCE, attributes);
-		let converter = get_attr_value(symbol::CONVERTER, attributes);
-		Self 
-        {
-			//span,
-			converter,
-			pattern,
-			precedence
-		}
-	}
-	pub fn get_precendence(&self) -> u8
-	{
-	   if let Some(p) = self.precedence.as_ref()
-	   {
-			let p= p.parse::<u8>();
-			if p.is_err()
-			{
-				eprint!("Ошибка значения очередности precedence {} - значение является типом u8", p.err().unwrap());
-				return 0;
-			}
-			else 
-			{
-				return p.unwrap();
-			}
-	   }
-	   0
-	}
-	pub fn split_conv(&self) -> Option<(String, String)>
-	{
-		let conv = self.converter.as_ref()?;
-		if !conv.contains(">")
+		let defs = parse_tokens(attributes);
+		if defs.is_ok()
 		{
-			eprint!("Ошибка, неправильная конструкция в конвертере значений! {} - должна быть: изменяемое>измененное", conv);
-			return None;
+			return defs.unwrap();
 		}
-		let parsed: Vec<&str> = conv.split(">").collect();
-		let first = parsed.iter().nth(0)?;
-		let second = parsed.iter().nth(1)?;
-		return Some((first.to_string(), second.to_string()));
+		else 
+		{
+			eprint!("Ошибка парсинга токенов: {}", defs.err().unwrap());
+			return vec![];
+		}
 	}
+	// pub fn get_precendence(&self) -> u8
+	// {
+	//    if let Some(p) = self.precedence.as_ref()
+	//    {
+	// 		let p= p.parse::<u8>();
+	// 		if p.is_err()
+	// 		{
+	// 			eprint!("Ошибка значения очередности precedence {} - значение является типом u8", p.err().unwrap());
+	// 			return 0;
+	// 		}
+	// 		else 
+	// 		{
+	// 			return p.unwrap();
+	// 		}
+	//    }
+	//    0
+	// }
+	// pub fn split_conv(&self) -> Option<(String, String)>
+	// {
+	// 	let conv = self.converter.as_ref()?;
+	// 	if !conv.contains(">")
+	// 	{
+	// 		eprint!("Ошибка, неправильная конструкция в конвертере значений! {} - должна быть: изменяемое>измененное", conv);
+	// 		return None;
+	// 	}
+	// 	let parsed: Vec<&str> = conv.split(">").collect();
+	// 	let first = parsed.iter().nth(0)?;
+	// 	let second = parsed.iter().nth(1)?;
+	// 	return Some((first.to_string(), second.to_string()));
+	// }
 
 }
 
 ///TODO до сюда вроде все понятно) но только снизу
 
 ///Возвращает только значение аттрибута
-fn get_attr_value(attr_name: Symbol, attributes: &[Attribute]) -> Option<String> 
+// fn get_attr_value(attr_name: Symbol, attributes: &[Attribute]) -> Option<String> 
+// {
+// 	for attr in attributes 
+//     {
+// 		if attr.path() == symbol::BASE 
+//         {
+// 			let parsed = parse_attr(attr)?;
+// 			if parsed.0 == attr_name 
+//             {
+// 				return Some(parsed.1);
+// 			}
+// 		}
+// 	}
+// 	None
+// }
+
+
+// fn parse_attr(attr: &Attribute) -> Option<(Path, String)> 
+// {
+// 	let stream = attr.parse_args::<ExprAssign>().ok()?;
+// 	let left = if let syn::Expr::Path(value) = *stream.left 
+//     {
+// 		value
+// 	} 
+//     else 
+//     {
+// 		return None;
+// 	};
+// 	let right = if let syn::Expr::Lit(value) = *stream.right 
+//     {
+// 		value
+// 	} 
+//     else 
+//     {
+// 		return None;
+// 	};
+
+// 	let right_value = if let syn::Lit::Str(value) = right.lit 
+//     {
+// 		value.value()
+// 	} 
+//     else 
+//     {
+// 		return None;
+// 	};
+// 	Some((left.path, right_value))
+// }
+
+fn parse_tokens(attributes: &[Attribute]) -> Result<Vec<Def>, syn::Error> 
 {
-	for attr in attributes 
-    {
-		if attr.path == symbol::BASE 
-        {
-			let parsed = parse_attr(attr)?;
-			if parsed.0 == attr_name 
-            {
-				return Some(parsed.1);
+	let mut defs: Vec<Def> = vec![];
+	for attr in attributes
+	{
+		if attr.path().is_ident(&symbol::BASE)
+		{
+			let nested = attr.parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)?;
+			{
+				let mut def = Def::default();
+				for meta in nested 
+				{
+					match meta 
+					{
+						// #[token(pattern())]
+						Meta::List(meta) if meta.path.is_ident(&symbol::PATTERN) => 
+						{
+							let lit: LitStr = meta.parse_args()?;
+							let p: String = lit.value();
+							eprint!("значение паттерна: {}", &p);
+							def.pattern = Some(p);
+						},
+						Meta::List(meta) if meta.path.is_ident(&symbol::PRECEDENCE) => 
+						{
+							let lit: LitInt = meta.parse_args()?;
+							let p: u16 = lit.base10_parse()?;
+							eprint!("значение очередности: {}", &p);
+							def.precedence = Some(p as u8);
+						},
+						Meta::List(meta) if meta.path.is_ident(&symbol::CONVERTER) => 
+						{
+							let lit: LitStr = meta.parse_args()?;
+							let p = lit.value();
+							eprint!("значение конвертера: {}", &p);
+							def.converter = Some(p);
+						},
+						_ => 
+						{
+
+							return Err(Error::new_spanned(meta, "нераспознана последовательность token"));
+						}
+					}
+				}
+				defs.push(def);
 			}
 		}
-	}
-	None
-}
-
-
-fn parse_attr(attr: &Attribute) -> Option<(Path, String)> 
-{
-	let stream = attr.parse_args::<ExprAssign>().ok()?;
-	let left = if let syn::Expr::Path(value) = *stream.left 
-    {
-		value
-	} 
-    else 
-    {
-		return None;
-	};
-	let right = if let syn::Expr::Lit(value) = *stream.right 
-    {
-		value
-	} 
-    else 
-    {
-		return None;
-	};
-
-	let right_value = if let syn::Lit::Str(value) = right.lit 
-    {
-		value.value()
-	} 
-    else 
-    {
-		return None;
-	};
-	Some((left.path, right_value))
-}
-
-fn parse_attr_name(attr: &Attribute) -> Option<Path> 
-{
-	// TODO: Actually use parse_meta() for all attributes instead of just this one.
-
-	let parse = attr.parse_meta().expect("--------------------------------------------");
-	if let Meta::List(val) = parse 
-    {
-		let ret = val.nested.into_iter().next();
-		if let NestedMeta::Meta(Meta::Path(path)) = ret? 
-        {
-			return Some(path);
+		else 
+		{
+			return Err(Error::new_spanned(attr.path(), "последовательность token не найдена"));
 		}
 	}
-	None
+	Ok(defs)
 }
+
+// fn parse_attr_name(attr: &Attribute) -> Option<Path> 
+// {
+// 	// TODO: Actually use parse_meta() for all attributes instead of just this one.
+
+// 	let parse = attr.parse.expect("--------------------------------------------");
+// 	if let Meta::List(val) = parse 
+//     {
+// 		let ret = val.nested.into_iter().next();
+// 		if let NestedMeta::Meta(Meta::Path(path)) = ret? 
+//         {
+// 			return Some(path);
+// 		}
+// 	}
+// 	None
+// }
