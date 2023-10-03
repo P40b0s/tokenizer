@@ -81,5 +81,9 @@ impl<T> TokenActions<T> for TokenModel<T> where T : PartialEq + Clone
     {
         (self.token.start_index, self.token.lenght)
     }
+    fn get_converted_value(&self) -> Option<&String>
+    {
+        self.token.converted_value.as_ref()
+    }
 
 }

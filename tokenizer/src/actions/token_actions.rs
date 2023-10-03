@@ -15,4 +15,5 @@ pub trait TokenActions<T> where T: PartialEq + Clone
     fn to_token_model(&self, t: &Token<T>) -> TokenModel<T>;
     //отдает индекс начала вхождения и длинну вхождения в искомой строке
     fn get_coordinates(&self) -> (usize, usize);
+    fn get_converted_value(&self) -> Option<&String>;
 }
