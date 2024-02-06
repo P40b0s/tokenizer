@@ -34,6 +34,8 @@ pub enum TT
     One,
     Two
 }
+///FIXME если добавить #[doc=""] или так ///... то будет ошибка cannot infer type, надо с этим что то сделать
+/// похоже что попадет токен документации, надо его как то отсеять
 #[derive(Debug, Copy, PartialEq, Clone, Tokenizer)]
 enum LtrTokens
 {
@@ -54,7 +56,6 @@ enum LtrTokens
     #[token(pattern(r#"(?i)\[АДРЕСАТЫ\]"#))]
     Addressees,
     #[token(pattern(r#"\[ФАЙЛЫ\]"#))]
-    ///документация
     Files,
     #[token(pattern(r#"\[ПИСЬМО.*\]"#))]
     File,
@@ -85,6 +86,7 @@ fn test_new_macros()
     let actions = Lexer::tokenize(text, tt);
     let trtr = "";
 }
+
 #[test]
 fn test_tets_tokens()
 {
