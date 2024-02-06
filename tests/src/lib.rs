@@ -34,6 +34,35 @@ pub enum TT
     One,
     Two
 }
+#[derive(Debug, Copy, PartialEq, Clone, Tokenizer)]
+enum LtrTokens
+{
+    #[token(pattern(r#"\[[ПИСЬМО]{6}.*\]"#))]
+    Root,
+    #[token(pattern(r#"(?i)тема=([^\n\r]+)"#))]
+    Theme,
+    #[token(pattern(r#"(?i)автоотправка=([^\n\r]+)"#))]
+    IsAutosend,
+    #[token(pattern(r#"(?i)эцп=([^\n\r]+)"#))]
+    IsEds,
+    #[token(pattern(r#"(?i)доставлено=([^\n\r]+)"#))]
+    IsDelivered,
+    #[token(pattern(r#"(?i)прочтено=([^\n\r]+)"#))]
+    IsReading,
+    #[token(pattern(r#"(?i)дата=([^\n\r]+)"#))]
+    Date,
+    #[token(pattern(r#"(?i)\[АДРЕСАТЫ\]"#))]
+    Addressees,
+    #[token(pattern(r#"\[ФАЙЛЫ\]"#))]
+    ///документация
+    Files,
+    #[token(pattern(r#"\[ПИСЬМО.*\]"#))]
+    File,
+    #[token(pattern(r#"\[ТЕКСТ\]"#))]
+    Text,
+    #[token(pattern(r#"\d=([^\n\r]+)"#))]
+    NumberKey
+}
 
 #[test]
 fn test_new_macros()
@@ -55,6 +84,21 @@ fn test_new_macros()
     let tt = tt.unwrap();
     let actions = Lexer::tokenize(text, tt);
     let trtr = "";
+}
+#[test]
+fn test_tets_tokens()
+{
+    let tt : Option<String> = None;
+    // let tttt = tt.unwrap_or_else(|| {
+    //     println!("ERROR!");
+    //     "AADFFF".to_owned()
+    // });
+    let tt = LtrTokens::get_defs();
+    println!("{:?}", tt);
+    if tt.is_none()
+    {
+        return;
+    }
 }
 
 #[test]
