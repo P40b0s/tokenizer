@@ -250,8 +250,6 @@ impl Def
 
 }
 
-///TODO до сюда вроде все понятно) но только снизу
-
 ///Возвращает только значение аттрибута
 // fn get_attr_value(attr_name: Symbol, attributes: &[Attribute]) -> Option<String> 
 // {
@@ -320,21 +318,18 @@ fn parse_tokens(attributes: &[Attribute]) -> Result<Vec<Def>, syn::Error>
 						{
 							let lit: LitStr = meta.parse_args()?;
 							let p: String = lit.value();
-							eprint!("значение паттерна: {}", &p);
 							def.pattern = Some(p);
 						},
 						Meta::List(meta) if meta.path.is_ident(&symbol::PRECEDENCE) => 
 						{
 							let lit: LitInt = meta.parse_args()?;
 							let p: u16 = lit.base10_parse()?;
-							eprint!("значение очередности: {}", &p);
 							def.precedence = Some(p as u8);
 						},
 						Meta::List(meta) if meta.path.is_ident(&symbol::CONVERTER) => 
 						{
 							let lit: LitStr = meta.parse_args()?;
 							let p = lit.value();
-							eprint!("значение конвертера: {}", &p);
 							def.converter = Some(p);
 						},
 						_ => 
